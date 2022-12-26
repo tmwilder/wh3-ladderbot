@@ -1,0 +1,13 @@
+services:
+  mysql:
+    image: mysql:8.0
+    volumes:
+      - todo-mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: ladderbot
+      MYSQL_USER: ladderbot
+    ports:
+      - '3306:3306'
+volumes:
+  todo-mysql-data:
