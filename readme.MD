@@ -25,5 +25,9 @@ Other useful operations:
 TODO:
 
 1. Take first cut at design doc w/achilles
-2. Set up discord app creds for test and add to readme
-3. Set up Ngrok in docker compose local dev and add to readme
+2. Clean up some of the routing/request handling ergonomics so that our use of gin is less janky
+3. Write local logic for matchmaking and test it with the test apps
+4. Figure out AWS or GCP hosting story
+5. Deploy to prod
+6. Find first test channel - probably RTK - do a ladder trial
+7. Set up some admin functionality for fixing oops and such
