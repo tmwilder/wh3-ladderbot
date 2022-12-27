@@ -13,6 +13,9 @@ To get local development running:
 3. Wait a moment for the docker MySQL container to initialize.
 4. Set DB_USERNAME=root, DB_PASSWORD=password, DB_HOST=127.0.0.1, DB_PORt=3306 in env vars and fire off - `go run ./cmd/migrate.go`.
 5. Connect to localhost:3306 as root:password and check that tables were created.
+6. Run `go test internal db` to check connectivity.
+7. Follow instructions to set up a basic Discord Bot and get your public key, app id, and bot token.
+8. Set these as DISCORD_APP_ID, DISCORD_PUBLIC_KEY, DISCORD_BOT_TOKEN in env vars and launch the api server through the api command.
 
 Other useful operations:
 `docker compose -down` - Takes down the instances
@@ -21,6 +24,5 @@ Other useful operations:
 TODO:
 
 1. Take first cut at design doc w/achilles
-2. Pick go MySQL driver + fmwk and set up models to connect to db
-3. Set up discord app creds for test and add to readme
-4. Set up Ngrok in docker compose local dev and add to readme
+2. Set up discord app creds for test and add to readme
+3. Set up Ngrok in docker compose local dev and add to readme

@@ -7,6 +7,7 @@ import (
 func App() {
 	r := gin.Default()
 	r.GET("/view", helloHandler)
+	r.POST("/commands", installSlashCommandsHandler)
 
 	err := r.Run()
 	if err != nil {
