@@ -8,6 +8,7 @@ func App() {
 	r := gin.Default()
 	r.GET("/view", helloHandler)
 	r.POST("/commands", installSlashCommandsHandler)
+	r.POST("/interactions", interactionsHandler)
 
 	err := r.Run()
 	if err != nil {
