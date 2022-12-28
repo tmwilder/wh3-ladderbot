@@ -116,14 +116,10 @@ func handleInteractionCommand(interaction Interaction) (channelMessage string) {
 	// Do authz - checks that the userID can do the thing being attempted - bail w/4xx if not.
 	switch interaction.Data.Name {
 	case COMMAND_QUEUED:
-		success := queueMatchRequest(interaction)
-		if success {
-			channelMessage = fmt.Sprintf("Queued request.")
-		} else {
-			channelMessage = fmt.Sprintf("Unable to queue request, please try again and contact admin if this persists.")
-		}
+		_, channelMessage = queueMatchRequest(interaction)
 		break
 	case COMMAND_DEQUEUE:
+		_, channelMessage = dequeueMatchRequest(interaction)
 		break
 	default:
 		panic("Unknown interaction: " + interaction.Data.Name)
@@ -131,13 +127,12 @@ func handleInteractionCommand(interaction Interaction) (channelMessage string) {
 	return channelMessage
 }
 
-func queueMatchRequest(interaction Interaction) (success bool) {
+func queueMatchRequest(interaction Interaction) (success bool, channelMessage string) {
 	queueValue := interaction.Data.Options[0].Value
 	discordUserId := interaction.Member.User.Id
 	discordUserName := interaction.Member.User.Username
 
-	// Get DB conn
-	conn := db.GetGorm(db.GetMySQLConnStr())
+	conn := db.GetDbConn()
 
 	// Check to see if the user exists, if not create them.
 	// We do this to avoid users ever having a register step - this takes advantage of Discord's Authn
@@ -154,7 +149,12 @@ func queueMatchRequest(interaction Interaction) (success bool) {
 		_, user = db.GetUser(conn, discordUserId)
 	}
 
-	// Now with assurances of a registered user - try to queue their entry
+	foundEntry, _ := db.GetMatchRequest(conn, user.UserId)
+	if foundEntry {
+		return false, "Found existing queued match request - if you want to change your elo range dequeue and requeue at the new range, otherwise stand by and you will be paired when a matching player joins!"
+	}
+
+	// Now with assurances of a registered user and no existing entry - try to queue their entry
 	didQueueMatch := db.CreateMatchRequest(conn, db.MatchRequest{
 		RequestingUserId:  user.UserId,
 		CreatedAt:         time.Now(),
@@ -166,5 +166,26 @@ func queueMatchRequest(interaction Interaction) (success bool) {
 
 	// TODO run matchmaking algo here after we implement.
 	db.FindPairing(conn, db.MatchRequest{})
-	return didQueueMatch
+	return didQueueMatch, fmt.Sprintf("You have successfully joined the matchmaking queue with a range of %d elo points.", queueValue)
+}
+
+func dequeueMatchRequest(interaction Interaction) (success bool, channelMessage string) {
+	discordUserId := interaction.Member.User.Id
+	conn := db.GetDbConn()
+	foundUser, user := db.GetUser(conn, discordUserId)
+
+	if !foundUser {
+		return false, "Unable to find your account in our system. You must queue at least once to register before you can dequeue. If this is a mistake contact the admins to iron it out and we'll help!"
+	}
+
+	foundMatchRequest, _ := db.GetMatchRequest(conn, user.UserId)
+	if !foundMatchRequest {
+		return false, "You have already dequeued - nothing to do!"
+	}
+	cancelledRequest := db.CancelMatchRequest(conn, user.UserId)
+	if cancelledRequest {
+		return true, "Dequeued successfully."
+	} else {
+		return false, "An unidentified technical issue happened while trying to dequeue. Please try again and if the problem persists contact admin and we will hit the TV until it works."
+	}
 }

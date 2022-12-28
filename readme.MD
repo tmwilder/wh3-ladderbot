@@ -26,10 +26,9 @@ Other useful operations:
 *[Design Doc](https://docs.google.com/document/d/11ivp-l3DZtG7wLEwbGDa3vjmKztld-1AUIIneHfWqaE/edit?usp=sharing)
 
 ## TODO:
-1. Take first cut at design doc w/achilles
-2. Clean up some of the routing/request handling ergonomics so that our use of gin is less janky
-3. Write local logic for matchmaking and test it with the test apps
-4. Figure out AWS or GCP hosting story
-5. Deploy to prod
-6. Find first test channel - probably RTK - do a ladder trial
-7. Set up some admin functionality for fixing oops and such
+1. Clean up some of the routing/request handling/error handling ergonomics so that our use of gin is less janky
+2. Write local logic for matchmaking and test it with the test apps
+3. Figure out AWS or GCP hosting story
+4. Deploy to prod
+5. Find first test channel - probably RTK - do a ladder trial
+6. Set up some admin functionality for fixing oops and such

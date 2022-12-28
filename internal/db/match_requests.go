@@ -40,6 +40,11 @@ func CreateMatchRequest(conn *gorm.DB, request MatchRequest) (success bool) {
 			request.RequestedGameMode,
 			request.MatchRequestState,
 		)
+		if tx.Error != nil {
+			log.Println(tx.Error)
+			success = false
+			return nil
+		}
 		// Get the auto incremented ID.
 		foundRequest, persistedRequest := GetMatchRequest(tx, request.RequestingUserId)
 		if foundRequest == false {

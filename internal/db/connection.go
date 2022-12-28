@@ -63,3 +63,7 @@ func GetGorm(connectionStr string) (db *gorm.DB) {
 	}
 	return db
 }
+
+func GetDbConn() (db *gorm.DB) {
+	return GetGorm(getMySQLDSN(GetConnectionParams()))
+}
