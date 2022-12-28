@@ -22,8 +22,10 @@ Other useful operations:
 `docker compose -down` - Takes down the instances
 `docker compose -down --volumes` - Takes down the instances and deletes the backing store for MysQL.
 
-TODO:
+## Resources
+*(Design Doc)[https://docs.google.com/document/d/11ivp-l3DZtG7wLEwbGDa3vjmKztld-1AUIIneHfWqaE/edit?usp=sharing]
 
+## TODO:
 1. Take first cut at design doc w/achilles
 2. Clean up some of the routing/request handling ergonomics so that our use of gin is less janky
 3. Write local logic for matchmaking and test it with the test apps

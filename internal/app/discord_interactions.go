@@ -110,6 +110,8 @@ func parseInteraction(requestBodyData []byte) (interaction Interaction) {
 }
 
 func handleInteractionCommand(interaction Interaction) (channelMessage string) {
+	// Authn - gets the user id
+	// Do authz - checks that the userID can do the thing being attempted - bail w/4xx if not.
 	switch interaction.Data.Name {
 	case COMMAND_QUEUED:
 		// TODO do matchmaking stuff here later
