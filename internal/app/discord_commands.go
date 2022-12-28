@@ -28,10 +28,10 @@ func installGlobalCommands(config DiscordAppConfig) {
 		{
 			Name:        "queue",
 			Type:        1,
-			Description: "Enter the matchmaking queue",
+			Description: "Enter the matchmaking queue.",
 			Options: []CommandOption{{
 				Name:        "range",
-				Description: "How many divisions up and down you want to match into. Defaults to 2.",
+				Description: "How many elo points up and down you want to match into. Defaults to 300.",
 				Type:        4,
 				Required:    false,
 			}},
@@ -39,7 +39,7 @@ func installGlobalCommands(config DiscordAppConfig) {
 		{
 			Name:        "dequeue",
 			Type:        1,
-			Description: "Leave the matchmaking queue",
+			Description: "Leave the matchmaking queue.",
 		},
 	}
 

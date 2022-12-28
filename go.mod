@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/gin-gonic/gin v1.8.2
+	github.com/go-playground/assert/v2 v2.0.1
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	gorm.io/driver/mysql v1.4.4
 	gorm.io/gorm v1.24.2

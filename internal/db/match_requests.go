@@ -89,10 +89,64 @@ func GetMatchRequest(conn *gorm.DB, userId int) (foundRequest bool, matchRequest
 }
 
 /*
-FindPairing Find a legal and optimal match for the current match request.
+	FindPairing Find all legal matches for the current match request as defined by being within rating range and
+	matching the requested game mode.
+
+	We'll then in-code determine an optimal one so that we can write more testable/detailed pairing routines than the DB
+	query makes easy.
 */
-func FindPairing(conn *gorm.DB, request MatchRequest) (foundPairing bool, pairing MatchRequest) {
-	return false, MatchRequest{}
+func FindCandidatePairings(conn *gorm.DB, request MatchRequest) (response []MatchRequest) {
+	rows, err := conn.Raw(
+		`SELECT
+				mr.id,
+				requesting_user_id,
+				created_at,
+				updated_at,
+				request_range,
+				requested_game_mode,
+				match_request_state
+			FROM match_requests mr
+			INNER JOIN users opponent
+				ON mr.requesting_user_id = opponent.id
+			INNER JOIN users requester
+				ON requester.id = @requester_user_id
+			WHERE 
+				requesting_user_id != @requester_user_id AND
+				(requested_game_mode = @requested_game_mode OR requested_game_mode = @game_mode_all OR @requested_game_mode = @game_mode_all) AND
+				ABS(requester.current_rating - opponent.current_rating) <= @request_rating_range
+			ORDER BY mr.created_at ASC
+			LIMIT 100`,
+		sql.Named("requester_user_id", request.RequestingUserId),
+		sql.Named("requested_game_mode", request.RequestedGameMode),
+		sql.Named("game_mode_all", GAME_MODE_ALL),
+		sql.Named("request_rating_range", request.RequestRange),
+	).Rows()
+
+	if err != nil {
+		panic(err)
+	}
+
+	if conn.Error != nil {
+		panic(conn.Error)
+	}
+
+	for rows.Next() {
+		matchRequest := MatchRequest{}
+		err := rows.Scan(
+			&matchRequest.MatchRequestId,
+			&matchRequest.RequestingUserId,
+			&matchRequest.CreatedAt,
+			&matchRequest.UpdatedAt,
+			&matchRequest.RequestRange,
+			&matchRequest.RequestedGameMode,
+			&matchRequest.MatchRequestState)
+
+		if err != nil {
+			log.Printf("Unable to read history row for matchRequest %d: %v", request.MatchRequestId, err)
+		}
+		response = append(response, matchRequest)
+	}
+	return response
 }
 
 /*
@@ -130,7 +184,22 @@ func CancelMatchRequest(conn *gorm.DB, userId int) (success bool) {
 }
 
 func GetMatchRequestHistory(conn *gorm.DB, matchRequestId int) (matchRequests []MatchRequest) {
-	rows, err := conn.Raw("SELECT match_request_id, requesting_user_id, created_at, updated_at, request_range, requested_game_mode, match_request_state FROM match_requests_history WHERE match_request_id = ? ORDER BY updated_at ASC", matchRequestId).Rows()
+	rows, err := conn.Raw(`
+		SELECT
+			match_request_id,
+			requesting_user_id,
+			created_at,
+			updated_at,
+			request_range,
+			requested_game_mode,
+			match_request_state
+		FROM match_requests_history
+		WHERE
+			match_request_id = ?
+		ORDER BY
+			updated_at ASC`,
+		matchRequestId).Rows()
+
 	if err != nil {
 		panic(err)
 	}
