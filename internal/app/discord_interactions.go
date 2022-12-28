@@ -3,12 +3,14 @@ package app
 import (
 	"bytes"
 	"crypto/ed25519"
+	"discordbot/internal/db"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
+	"time"
 )
 
 const COMMAND_QUEUED = "queue"
@@ -114,9 +116,12 @@ func handleInteractionCommand(interaction Interaction) (channelMessage string) {
 	// Do authz - checks that the userID can do the thing being attempted - bail w/4xx if not.
 	switch interaction.Data.Name {
 	case COMMAND_QUEUED:
-		// TODO do matchmaking stuff here later
-		queueValue := interaction.Data.Options[0].Value
-		channelMessage = fmt.Sprintf("Queued with ratings range: %d", queueValue)
+		success := queueMatchRequest(interaction)
+		if success {
+			channelMessage = fmt.Sprintf("Queued request.")
+		} else {
+			channelMessage = fmt.Sprintf("Unable to queue request, please try again and contact admin if this persists.")
+		}
 		break
 	case COMMAND_DEQUEUE:
 		break
@@ -124,4 +129,42 @@ func handleInteractionCommand(interaction Interaction) (channelMessage string) {
 		panic("Unknown interaction: " + interaction.Data.Name)
 	}
 	return channelMessage
+}
+
+func queueMatchRequest(interaction Interaction) (success bool) {
+	queueValue := interaction.Data.Options[0].Value
+	discordUserId := interaction.Member.User.Id
+	discordUserName := interaction.Member.User.Username
+
+	// Get DB conn
+	conn := db.GetGorm(db.GetMySQLConnStr())
+
+	// Check to see if the user exists, if not create them.
+	// We do this to avoid users ever having a register step - this takes advantage of Discord's Authn
+	// and bot token validation flows.
+	foundUser, user := db.GetUser(conn, discordUserId)
+	if !foundUser {
+		db.CreateUser(
+			conn,
+			db.User{
+				DiscordId:       discordUserId,
+				DiscordUserName: discordUserName,
+				CurrentRating:   db.DEFAULT_RATING,
+			})
+		_, user = db.GetUser(conn, discordUserId)
+	}
+
+	// Now with assurances of a registered user - try to queue their entry
+	didQueueMatch := db.CreateMatchRequest(conn, db.MatchRequest{
+		RequestingUserId:  user.UserId,
+		CreatedAt:         time.Now(),
+		UpdatedAt:         time.Now(),
+		RequestRange:      queueValue,       // TODO fix client param tooltip
+		RequestedGameMode: db.GAME_MODE_ALL, // TODO add as client param
+		MatchRequestState: db.MATCH_REQUEST_STATE_QUEUED,
+	})
+
+	// TODO run matchmaking algo here after we implement.
+	db.FindPairing(conn, db.MatchRequest{})
+	return didQueueMatch
 }

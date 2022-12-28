@@ -18,7 +18,7 @@ func TestCreateUser(t *testing.T) {
 
 	CreateUser(conn, User{0, testDiscordId, testDiscordUsername, DEFAULT_RATING})
 
-	user := GetUser(conn, testDiscordId)
+	_, user := GetUser(conn, testDiscordId)
 
 	if user.DiscordUserName != testDiscordUsername {
 		t.Error("Unable to create test user: " + testDiscordUsername)
@@ -38,7 +38,7 @@ func TestUpdateRating(t *testing.T) {
 	testRating := rand.Intn(10000)
 	UpdateUserRating(conn, testDiscordId, testRating)
 
-	updatedUser := GetUser(conn, testDiscordId)
+	_, updatedUser := GetUser(conn, testDiscordId)
 	if updatedUser.CurrentRating != testRating {
 		t.Error("Unable to create test user: " + testDiscordUsername)
 	}

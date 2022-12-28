@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +19,7 @@ func CreateUser(conn *gorm.DB, user User) {
 	}
 }
 
-func GetUser(conn *gorm.DB, discordId string) (result User) {
+func GetUser(conn *gorm.DB, discordId string) (foundUser bool, result User) {
 	row := conn.Raw("SELECT id, discord_id, discord_username, current_rating FROM users WHERE discord_id = ?", discordId).Row()
 	if conn.Error != nil {
 		// TODO - How does this work with pooling and concurrency?
@@ -26,9 +27,13 @@ func GetUser(conn *gorm.DB, discordId string) (result User) {
 	}
 	err := row.Scan(&result.UserId, &result.DiscordId, &result.DiscordUserName, &result.CurrentRating)
 	if err != nil {
-		panic(err)
+		if err == sql.ErrNoRows {
+			return false, result
+		} else {
+			panic(err)
+		}
 	}
-	return result
+	return true, result
 }
 
 func UpdateUserRating(conn *gorm.DB, discordId string, newRating int) {
