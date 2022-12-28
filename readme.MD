@@ -23,7 +23,7 @@ Other useful operations:
 `docker compose -down --volumes` - Takes down the instances and deletes the backing store for MysQL.
 
 ## Resources
-*(Design Doc)[https://docs.google.com/document/d/11ivp-l3DZtG7wLEwbGDa3vjmKztld-1AUIIneHfWqaE/edit?usp=sharing]
+*[Design Doc](https://docs.google.com/document/d/11ivp-l3DZtG7wLEwbGDa3vjmKztld-1AUIIneHfWqaE/edit?usp=sharing)
 
 ## TODO:
 1. Take first cut at design doc w/achilles
