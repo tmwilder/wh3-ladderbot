@@ -52,3 +52,54 @@ func TestCreateMatchRequest(t *testing.T) {
 		t.Errorf("Expected match_request_id in history of %d but got %d", persistedRequest.MatchRequestId, history[0].MatchRequestId)
 	}
 }
+
+func TestCancelMatchRequest(t *testing.T) {
+	conn := GetGorm(GetTestMysSQLConnStr())
+	rand.Seed(time.Now().UnixNano())
+
+	testDiscordUsername := fmt.Sprintf("coolsk8r1990%d", rand.Intn(1000000))
+	testDiscordId := fmt.Sprintf("somediscordId%d", rand.Intn(1000000))
+
+	CreateUser(conn, User{0, testDiscordId, testDiscordUsername, DEFAULT_RATING})
+	user := GetUser(conn, testDiscordId)
+
+	matchRequest := MatchRequest{
+		0,
+		user.UserId,
+		time.Now(),
+		time.Now(),
+		200,
+		GAME_MODE_ALL,
+		MATCH_REQUEST_STATE_QUEUED,
+	}
+
+	CreateMatchRequest(conn, matchRequest)
+
+	_, persistedRequest := GetMatchRequest(conn, user.UserId)
+
+	didCancelRequest := CancelMatchRequest(conn, user.UserId)
+
+	if !didCancelRequest {
+		t.Errorf("Unable to cancel match request.")
+	}
+
+	foundCancelledRequest, _ := GetMatchRequest(conn, user.UserId)
+
+	if foundCancelledRequest {
+		t.Error("Request still exists despite being cancelled.")
+	}
+
+	history := GetMatchRequestHistory(conn, persistedRequest.MatchRequestId)
+
+	if len(history) != 2 {
+		t.Errorf("Got history of len %d instead of 2.", len(history))
+	}
+
+	if history[1].MatchRequestId != persistedRequest.MatchRequestId {
+		t.Errorf("Expected match_request_id in history of %d but got %d", persistedRequest.MatchRequestId, history[0].MatchRequestId)
+	}
+
+	if history[1].MatchRequestState != MATCH_REQUEST_STATE_CANCELLED {
+		t.Errorf("Expected cancelled history state to be %s but was %s", MATCH_REQUEST_STATE_CANCELLED, history[1].MatchRequestState)
+	}
+}

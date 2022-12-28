@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"gorm.io/gorm"
 	"log"
 	"time"
@@ -72,7 +73,11 @@ func GetMatchRequest(conn *gorm.DB, userId int) (foundRequest bool, matchRequest
 			&matchRequest.RequestedGameMode,
 			&matchRequest.MatchRequestState)
 		if err != nil {
-			panic(err)
+			if err == sql.ErrNoRows {
+				return false, MatchRequest{}
+			} else {
+				panic(err)
+			}
 		}
 		return true, matchRequest
 	}
@@ -94,9 +99,9 @@ func CompleteRequests(conn *gorm.DB, matchRequest1 int, matchRequest2 int) (succ
 }
 
 /*
-CancelRequest remove the match request from queue.
+CancelMatchRequest remove the match request from queue.
 */
-func CancelRequest(conn *gorm.DB, userId int) (success bool) {
+func CancelMatchRequest(conn *gorm.DB, userId int) (success bool) {
 	// Create the new match and also its history record as one db txn
 	err := conn.Transaction(func(tx *gorm.DB) error {
 		foundRequest, matchRequest := GetMatchRequest(tx, userId)
@@ -110,6 +115,7 @@ func CancelRequest(conn *gorm.DB, userId int) (success bool) {
 		matchRequest.UpdatedAt = time.Now()
 		createMatchRequestHistory(tx, matchRequest)
 		deleteMatchRequest(tx, matchRequest.MatchRequestId)
+		success = true
 		return nil
 	})
 	if err != nil {
