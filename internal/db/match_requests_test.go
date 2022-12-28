@@ -24,8 +24,8 @@ func TestCreateMatchRequest(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		200,
-		GAME_MODE_ALL,
-		MATCH_REQUEST_STATE_QUEUED,
+		GameModeAll,
+		MatchRequestStateQueued,
 	}
 
 	success := CreateMatchRequest(conn, matchRequest)
@@ -71,8 +71,8 @@ func TestCancelMatchRequest(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		200,
-		GAME_MODE_ALL,
-		MATCH_REQUEST_STATE_QUEUED,
+		GameModeAll,
+		MatchRequestStateQueued,
 	}
 
 	CreateMatchRequest(conn, matchRequest)
@@ -101,8 +101,8 @@ func TestCancelMatchRequest(t *testing.T) {
 		t.Errorf("Expected match_request_id in history of %d but got %d", persistedRequest.MatchRequestId, history[0].MatchRequestId)
 	}
 
-	if history[1].MatchRequestState != MATCH_REQUEST_STATE_CANCELLED {
-		t.Errorf("Expected cancelled history state to be %s but was %s", MATCH_REQUEST_STATE_CANCELLED, history[1].MatchRequestState)
+	if history[1].MatchRequestState != MatchRequestStateCancelled {
+		t.Errorf("Expected cancelled history state to be %s but was %s", MatchRequestStateCancelled, history[1].MatchRequestState)
 	}
 }
 
@@ -128,22 +128,27 @@ func TestFindCandidatePairings(t *testing.T) {
 	testDiscordUsername3 := fmt.Sprintf("coolsk8r1990%d", rand.Intn(1000000))
 	testDiscordId3 := fmt.Sprintf("somediscordId%d", rand.Intn(1000000))
 
-	CreateUser(conn, User{0, testDiscordId1, testDiscordUsername1, 800})
-	CreateUser(conn, User{0, testDiscordId2, testDiscordUsername2, 900})
-	CreateUser(conn, User{0, testDiscordId3, testDiscordUsername3, 1000})
+	testDiscordUsername4 := fmt.Sprintf("coolsk8r1990%d", rand.Intn(1000000))
+	testDiscordId4 := fmt.Sprintf("somediscordId%d", rand.Intn(1000000))
+
+	CreateUser(conn, User{0, testDiscordId1, testDiscordUsername1, 750})
+	CreateUser(conn, User{0, testDiscordId2, testDiscordUsername2, 800})
+	CreateUser(conn, User{0, testDiscordId3, testDiscordUsername3, 900})
+	CreateUser(conn, User{0, testDiscordId4, testDiscordUsername4, 1000})
 
 	_, user1 := GetUser(conn, testDiscordId1)
 	_, user2 := GetUser(conn, testDiscordId2)
 	_, user3 := GetUser(conn, testDiscordId3)
+	_, user4 := GetUser(conn, testDiscordId4)
 
 	matchRequest := MatchRequest{
 		0,
 		user1.UserId,
 		time.Now(),
 		time.Now(),
-		99,
-		GAME_MODE_BO1,
-		MATCH_REQUEST_STATE_QUEUED,
+		49,
+		GameModeBo1,
+		MatchRequestStateQueued,
 	}
 
 	matchRequest2 := MatchRequest{
@@ -151,9 +156,9 @@ func TestFindCandidatePairings(t *testing.T) {
 		user2.UserId,
 		time.Now(),
 		time.Now(),
-		100,
-		GAME_MODE_ALL,
-		MATCH_REQUEST_STATE_QUEUED,
+		150,
+		GameModeBo1,
+		MatchRequestStateQueued,
 	}
 
 	matchRequest3 := MatchRequest{
@@ -161,28 +166,52 @@ func TestFindCandidatePairings(t *testing.T) {
 		user3.UserId,
 		time.Now(),
 		time.Now(),
-		200,
-		GAME_MODE_BO3,
-		MATCH_REQUEST_STATE_QUEUED,
+		300,
+		GameModeAll,
+		MatchRequestStateQueued,
+	}
+
+	matchRequest4 := MatchRequest{
+		0,
+		user4.UserId,
+		time.Now(),
+		time.Now(),
+		500,
+		GameModeBo3,
+		MatchRequestStateQueued,
 	}
 
 	CreateMatchRequest(conn, matchRequest)
 	CreateMatchRequest(conn, matchRequest2)
 	CreateMatchRequest(conn, matchRequest3)
+	CreateMatchRequest(conn, matchRequest4)
 
 	pairings1 := FindCandidatePairings(conn, matchRequest)
 	pairings2 := FindCandidatePairings(conn, matchRequest2)
 	pairings3 := FindCandidatePairings(conn, matchRequest3)
+	pairings4 := FindCandidatePairings(conn, matchRequest4)
 
-	// Request 1 has too low a range and should match with nothing
+	// Request 1 has too low a range and should match with nothing despite others being open to matching with it.
 	assert.Equal(t, len(pairings1), 0)
 
-	// Request 2 allows all modes and enough range and should match with both other requests
-	assert.Equal(t, len(pairings2), 2)
-	assert.Equal(t, pairings2[0].RequestingUserId, user1.UserId)
-	assert.Equal(t, pairings2[1].RequestingUserId, user3.UserId)
+	// Request 2 allows bo1 and enough range to match with 3, but should not match with 1 because of 1s range or 4 because 4 is outside of 2s range.
+	assert.Equal(t, len(pairings2), 1)
+	assert.Equal(t, pairings2[0].OpponentMatchRequest.RequestingUserId, user3.UserId)
+	assert.Equal(t, pairings2[0].OpponentRating, user3.CurrentRating)
+	assert.Equal(t, pairings2[0].OpponentDiscordUsername, user3.DiscordUserName)
 
-	// Request 3 has enough range to match with both others but is only for BO3 and so should match with only the 2nd
-	assert.Equal(t, len(pairings3), 1)
-	assert.Equal(t, pairings3[0].RequestingUserId, user2.UserId)
+	// Request 3 has enough range to match with all others but so should match with 2 and 4 who don't preclude it, but not 1 who does.
+	assert.Equal(t, len(pairings3), 2)
+	assert.Equal(t, pairings3[0].OpponentMatchRequest.RequestingUserId, user2.UserId)
+	assert.Equal(t, pairings3[0].OpponentRating, user2.CurrentRating)
+	assert.Equal(t, pairings3[0].OpponentDiscordUsername, user2.DiscordUserName)
+	assert.Equal(t, pairings3[1].OpponentMatchRequest.RequestingUserId, user4.UserId)
+	assert.Equal(t, pairings3[1].OpponentRating, user4.CurrentRating)
+	assert.Equal(t, pairings3[1].OpponentDiscordUsername, user4.DiscordUserName)
+
+	// Request 4 has enough range to match with all others but is only for bo3 so should only match with 3.
+	assert.Equal(t, len(pairings4), 1)
+	assert.Equal(t, pairings4[0].OpponentMatchRequest.RequestingUserId, user3.UserId)
+	assert.Equal(t, pairings4[0].OpponentRating, user3.CurrentRating)
+	assert.Equal(t, pairings4[0].OpponentDiscordUsername, user3.DiscordUserName)
 }

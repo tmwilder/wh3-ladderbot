@@ -36,6 +36,22 @@ func GetUser(conn *gorm.DB, discordId string) (foundUser bool, result User) {
 	return true, result
 }
 
+func GetUserById(conn *gorm.DB, userId int) (foundUser bool, result User) {
+	row := conn.Raw("SELECT id, discord_id, discord_username, current_rating FROM users WHERE id = ?", userId).Row()
+	if conn.Error != nil {
+		panic(conn.Error)
+	}
+	err := row.Scan(&result.UserId, &result.DiscordId, &result.DiscordUserName, &result.CurrentRating)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, result
+		} else {
+			panic(err)
+		}
+	}
+	return true, result
+}
+
 func UpdateUserRating(conn *gorm.DB, discordId string, newRating int) {
 	conn.Exec("UPDATE users SET current_rating = ? WHERE discord_id = ?", newRating, discordId)
 	if conn.Error != nil {

@@ -7,13 +7,15 @@ import (
 	"time"
 )
 
-const MATCH_REQUEST_STATE_QUEUED = "queued"
-const MATCH_REQUEST_STATE_CANCELLED = "cancelled"
-const MATCH_REQUEST_STATE_COMPLETED = "completed"
+const MatchRequestStateQueued = "queued"
+const MatchRequestStateCancelled = "cancelled"
+const MatchRequestStateCompleted = "completed"
 
-const GAME_MODE_BO1 = "bo1"
-const GAME_MODE_BO3 = "bo3"
-const GAME_MODE_ALL = "all"
+const GameModeBo1 = "bo1"
+const GameModeBo3 = "bo3"
+const GameModeAll = "all"
+
+const MaxSecondsInQueue = 30 * 60
 
 type MatchRequest struct {
 	MatchRequestId    int
@@ -29,7 +31,7 @@ type MatchRequestHistory struct {
 }
 
 func CreateMatchRequest(conn *gorm.DB, request MatchRequest) (success bool) {
-	// Create the new match and also its history record as one db txn
+	// Create the new match request and also its history record as one db txn
 	err := conn.Transaction(func(tx *gorm.DB) error {
 		tx.Exec(
 			"INSERT INTO match_requests (requesting_user_id, created_at, updated_at, request_range, requested_game_mode, match_request_state) values (?, ?, ?, ?, ?, ?)",
@@ -88,6 +90,12 @@ func GetMatchRequest(conn *gorm.DB, userId int) (foundRequest bool, matchRequest
 	}
 }
 
+type CandidatePairing struct {
+	OpponentMatchRequest    MatchRequest
+	OpponentRating          int
+	OpponentDiscordUsername string
+}
+
 /*
 	FindPairing Find all legal matches for the current match request as defined by being within rating range and
 	matching the requested game mode.
@@ -95,7 +103,8 @@ func GetMatchRequest(conn *gorm.DB, userId int) (foundRequest bool, matchRequest
 	We'll then in-code determine an optimal one so that we can write more testable/detailed pairing routines than the DB
 	query makes easy.
 */
-func FindCandidatePairings(conn *gorm.DB, request MatchRequest) (response []MatchRequest) {
+func FindCandidatePairings(conn *gorm.DB, request MatchRequest) (response []CandidatePairing) {
+	// TODO - decide if we should disqualify playing same person twice in a row.
 	rows, err := conn.Raw(
 		`SELECT
 				mr.id,
@@ -104,7 +113,9 @@ func FindCandidatePairings(conn *gorm.DB, request MatchRequest) (response []Matc
 				updated_at,
 				request_range,
 				requested_game_mode,
-				match_request_state
+				match_request_state,
+				opponent.current_rating,
+				opponent.discord_username
 			FROM match_requests mr
 			INNER JOIN users opponent
 				ON mr.requesting_user_id = opponent.id
@@ -113,12 +124,13 @@ func FindCandidatePairings(conn *gorm.DB, request MatchRequest) (response []Matc
 			WHERE 
 				requesting_user_id != @requester_user_id AND
 				(requested_game_mode = @requested_game_mode OR requested_game_mode = @game_mode_all OR @requested_game_mode = @game_mode_all) AND
-				ABS(requester.current_rating - opponent.current_rating) <= @request_rating_range
+				ABS(requester.current_rating - opponent.current_rating) <= @request_rating_range AND
+				ABS(requester.current_rating - opponent.current_rating) <= mr.request_range  
 			ORDER BY mr.created_at ASC
 			LIMIT 100`,
 		sql.Named("requester_user_id", request.RequestingUserId),
 		sql.Named("requested_game_mode", request.RequestedGameMode),
-		sql.Named("game_mode_all", GAME_MODE_ALL),
+		sql.Named("game_mode_all", GameModeAll),
 		sql.Named("request_rating_range", request.RequestRange),
 	).Rows()
 
@@ -132,6 +144,7 @@ func FindCandidatePairings(conn *gorm.DB, request MatchRequest) (response []Matc
 
 	for rows.Next() {
 		matchRequest := MatchRequest{}
+		candidatePairing := CandidatePairing{}
 		err := rows.Scan(
 			&matchRequest.MatchRequestId,
 			&matchRequest.RequestingUserId,
@@ -139,22 +152,16 @@ func FindCandidatePairings(conn *gorm.DB, request MatchRequest) (response []Matc
 			&matchRequest.UpdatedAt,
 			&matchRequest.RequestRange,
 			&matchRequest.RequestedGameMode,
-			&matchRequest.MatchRequestState)
-
+			&matchRequest.MatchRequestState,
+			&candidatePairing.OpponentRating,
+			&candidatePairing.OpponentDiscordUsername)
+		candidatePairing.OpponentMatchRequest = matchRequest
 		if err != nil {
 			log.Printf("Unable to read history row for matchRequest %d: %v", request.MatchRequestId, err)
 		}
-		response = append(response, matchRequest)
+		response = append(response, candidatePairing)
 	}
 	return response
-}
-
-/*
-CompleteRequests In an idempotent and concurrency safe way - translate two match requests to completed history
-records and indicate this in their states.
-*/
-func CompleteRequests(conn *gorm.DB, matchRequest1 int, matchRequest2 int) (success bool) {
-	return true
 }
 
 /*
@@ -170,10 +177,26 @@ func CancelMatchRequest(conn *gorm.DB, userId int) (success bool) {
 			return nil
 		}
 
-		matchRequest.MatchRequestState = MATCH_REQUEST_STATE_CANCELLED
+		matchRequest.MatchRequestState = MatchRequestStateCancelled
 		matchRequest.UpdatedAt = time.Now()
 		createMatchRequestHistory(tx, matchRequest)
 		deleteMatchRequest(tx, matchRequest.MatchRequestId)
+		success = true
+		return nil
+	})
+	if err != nil {
+		return false
+	}
+	return success
+}
+
+// create completed request history record and delete the match request as one txn.
+func completeMatchRequest(conn *gorm.DB, request MatchRequest) (success bool) {
+	err := conn.Transaction(func(tx *gorm.DB) error {
+		request.MatchRequestState = MatchRequestStateCompleted
+		request.UpdatedAt = time.Now()
+		createMatchRequestHistory(tx, request)
+		deleteMatchRequest(tx, request.MatchRequestId)
 		success = true
 		return nil
 	})
