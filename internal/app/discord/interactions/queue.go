@@ -3,20 +3,19 @@ package interactions
 import (
 	"discordbot/internal/db"
 	"fmt"
+	"gorm.io/gorm"
 	"time"
 )
 
-func Queue(interaction Interaction) (success bool, channelMessage string) {
+func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage string) {
 	queueValue := interaction.Data.Options[0].Value
 	discordUserId := interaction.Member.User.Id
 	discordUserName := interaction.Member.User.Username
 
-	conn := db.GetDbConn()
-
 	// Check to see if the user exists, if not create them.
 	// We do this to avoid users ever having a register step - this takes advantage of Discord's Authn
 	// and bot token validation flows.
-	foundUser, user := db.GetUser(conn, discordUserId)
+	foundUser, user := db.GetUserByDiscordId(conn, discordUserId)
 	if !foundUser {
 		db.CreateUser(
 			conn,
@@ -25,7 +24,7 @@ func Queue(interaction Interaction) (success bool, channelMessage string) {
 				DiscordUserName: discordUserName,
 				CurrentRating:   db.DEFAULT_RATING,
 			})
-		_, user = db.GetUser(conn, discordUserId)
+		_, user = db.GetUserByDiscordId(conn, discordUserId)
 	}
 
 	foundEntry, _ := db.GetMatchRequest(conn, user.UserId)

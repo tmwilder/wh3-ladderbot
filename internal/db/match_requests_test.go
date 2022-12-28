@@ -16,7 +16,7 @@ func TestCreateMatchRequest(t *testing.T) {
 	testDiscordId := fmt.Sprintf("somediscordId%d", rand.Intn(1000000))
 
 	CreateUser(conn, User{0, testDiscordId, testDiscordUsername, DEFAULT_RATING})
-	_, user := GetUser(conn, testDiscordId)
+	_, user := GetUserByDiscordId(conn, testDiscordId)
 
 	matchRequest := MatchRequest{
 		0,
@@ -63,7 +63,7 @@ func TestCancelMatchRequest(t *testing.T) {
 	testDiscordId := fmt.Sprintf("somediscordId%d", rand.Intn(1000000))
 
 	CreateUser(conn, User{0, testDiscordId, testDiscordUsername, DEFAULT_RATING})
-	_, user := GetUser(conn, testDiscordId)
+	_, user := GetUserByDiscordId(conn, testDiscordId)
 
 	matchRequest := MatchRequest{
 		0,
@@ -136,10 +136,10 @@ func TestFindCandidatePairings(t *testing.T) {
 	CreateUser(conn, User{0, testDiscordId3, testDiscordUsername3, 900})
 	CreateUser(conn, User{0, testDiscordId4, testDiscordUsername4, 1000})
 
-	_, user1 := GetUser(conn, testDiscordId1)
-	_, user2 := GetUser(conn, testDiscordId2)
-	_, user3 := GetUser(conn, testDiscordId3)
-	_, user4 := GetUser(conn, testDiscordId4)
+	_, user1 := GetUserByDiscordId(conn, testDiscordId1)
+	_, user2 := GetUserByDiscordId(conn, testDiscordId2)
+	_, user3 := GetUserByDiscordId(conn, testDiscordId3)
+	_, user4 := GetUserByDiscordId(conn, testDiscordId4)
 
 	matchRequest := MatchRequest{
 		0,

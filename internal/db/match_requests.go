@@ -253,10 +253,6 @@ func GetMatchRequestHistory(conn *gorm.DB, matchRequestId int) (matchRequests []
 	return matchRequests
 }
 
-func updateMatchRequestState(conn *gorm.DB, matchRequestId int, newState string) (success bool) {
-	return true
-}
-
 func deleteMatchRequest(conn *gorm.DB, matchRequestId int) (success bool) {
 	conn.Exec("DELETE FROM match_requests WHERE id = ?", matchRequestId)
 	if conn.Error != nil {

@@ -151,7 +151,65 @@ func GetCurrentMatch(conn *gorm.DB, userId int) (foundMatch bool, result Match) 
 		log.Println(conn.Error)
 		return false, Match{}
 	}
+	return parseMatchRow(row)
+}
 
+/*
+	GetCurrentMatch gets the most recent match if any for the specified user, regardless of whether it is still matched
+	so this means fetching cancelled/completed matches as well. We use this for performing user-fixes to data issues.
+*/
+func GetMostRecentMatch(conn *gorm.DB, userId int) (foundMatch bool, result Match) {
+	row := conn.Raw(`
+			SELECT 
+				id,
+				created_at,
+				updated_at,
+				match_state,
+				game_mode,
+				p1_user_id,
+				p2_user_id,
+				p1_match_request_id,
+				p2_match_request_id,
+				winner
+			FROM matches
+			WHERE
+				(p1_user_id = ? OR p2_user_id = ?) 
+			ORDER BY created_at DESC
+			LIMIT 1`,
+		userId,
+		userId,
+	).Row()
+	if conn.Error != nil {
+		log.Println(conn.Error)
+		return false, Match{}
+	}
+	return parseMatchRow(row)
+}
+
+func GetMatchById(conn *gorm.DB, matchId int) (foundMatch bool, match Match) {
+	row := conn.Raw(`
+			SELECT 
+				id,
+				created_at,
+				updated_at,
+				match_state,
+				game_mode,
+				p1_user_id,
+				p2_user_id,
+				p1_match_request_id,
+				p2_match_request_id,
+				winner
+			FROM matches
+			WHERE
+				id = ?`, matchId).Row()
+	if conn.Error != nil {
+		log.Println(conn.Error)
+		return false, Match{}
+	}
+	return parseMatchRow(row)
+}
+
+func parseMatchRow(row *sql.Row) (success bool, result Match) {
 	err := row.Scan(
 		&result.MatchId,
 		&result.CreatedAt,
@@ -167,7 +225,7 @@ func GetCurrentMatch(conn *gorm.DB, userId int) (foundMatch bool, result Match) 
 		if err == sql.ErrNoRows {
 			return false, Match{}
 		} else {
-			log.Println(conn.Error)
+			log.Println(err)
 			return false, Match{}
 		}
 	}
@@ -175,6 +233,14 @@ func GetCurrentMatch(conn *gorm.DB, userId int) (foundMatch bool, result Match) 
 }
 
 func UpdateMatch(conn *gorm.DB, matchId int, state MatchState, winner WhoWon) (success bool) {
+	now := time.Now()
+	conn.Exec("UPDATE matches SET match_state = ?, winner = ?, updated_at = ? WHERE id = ?", state, winner, now, matchId)
+	if conn.Error != nil {
+		log.Println(conn.Error)
+		return false
+	}
+	_, match := GetMatchById(conn, matchId)
+	CreateMatchHistory(conn, match)
 	return true
 }
 

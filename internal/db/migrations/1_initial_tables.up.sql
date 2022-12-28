@@ -70,7 +70,6 @@ create table if not exists user_ratings_history (
     user_id int NOT NULL,
     rating int NOT NULL,
     match_id int NOT NULL,
-    previous_match_id int NOT NULL COMMENT 'Identifies the match before this rating update so that we can walk back accidental updates when fixing data entry errors.',
     is_tombstoned bool DEFAULT false COMMENT 'If we walk back a ratings change to fix data entry errors we tombstone the change which results in hiding it from history updates.',
     created_at TIMESTAMP NOT NULL,
     CONSTRAINT FK_MATCH_USER FOREIGN KEY (user_id) REFERENCES users(id),

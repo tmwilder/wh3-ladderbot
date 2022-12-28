@@ -2,12 +2,13 @@ package interactions
 
 import (
 	"discordbot/internal/db"
+	"gorm.io/gorm"
 )
 
-func Dequeue(interaction Interaction) (success bool, channelMessage string) {
+func Dequeue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage string) {
 	discordUserId := interaction.Member.User.Id
-	conn := db.GetDbConn()
-	foundUser, user := db.GetUser(conn, discordUserId)
+
+	foundUser, user := db.GetUserByDiscordId(conn, discordUserId)
 
 	if !foundUser {
 		return false, "Unable to find your account in our system. You must queue at least once to register before you can dequeue. If this is a mistake contact the admins to iron it out and we'll help!"

@@ -6,6 +6,7 @@ import (
 	"discordbot/internal/app/config"
 	"discordbot/internal/app/discord/commands"
 	"discordbot/internal/app/discord/interactions"
+	"discordbot/internal/db"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -82,15 +83,17 @@ func parseInteraction(requestBodyData []byte) (interaction interactions.Interact
 func handleInteractionCommand(interaction interactions.Interaction) (channelMessage string) {
 	// Authn - gets the user id
 	// Do authz - checks that the userID can do the thing being attempted - bail w/4xx if not.
+	conn := db.GetDbConn()
+
 	switch interaction.Data.Name {
 	case commands.Queue:
-		_, channelMessage = interactions.Queue(interaction)
+		_, channelMessage = interactions.Queue(conn, interaction)
 		break
 	case commands.Dequeue:
-		_, channelMessage = interactions.Dequeue(interaction)
+		_, channelMessage = interactions.Dequeue(conn, interaction)
 		break
 	case commands.Report:
-		_, channelMessage = interactions.Report(interaction)
+		_, channelMessage = interactions.Report(conn, interaction)
 	default:
 		panic("Unknown interaction: " + interaction.Data.Name)
 	}

@@ -11,10 +11,6 @@ import (
 func TestCreateMatchFromRequests(t *testing.T) {
 	conn := GetGorm(GetTestMysSQLConnStr())
 
-	if conn.Error != nil {
-		t.Errorf("%v", conn.Error)
-	}
-
 	rand.Seed(time.Now().UnixNano())
 
 	testDiscordUsername1 := fmt.Sprintf("coolsk8r1990%d", rand.Intn(1000000))
@@ -26,8 +22,8 @@ func TestCreateMatchFromRequests(t *testing.T) {
 	CreateUser(conn, User{0, testDiscordId1, testDiscordUsername1, 750})
 	CreateUser(conn, User{0, testDiscordId2, testDiscordUsername2, 800})
 
-	_, user1 := GetUser(conn, testDiscordId1)
-	_, user2 := GetUser(conn, testDiscordId2)
+	_, user1 := GetUserByDiscordId(conn, testDiscordId1)
+	_, user2 := GetUserByDiscordId(conn, testDiscordId2)
 
 	matchRequest := MatchRequest{
 		0,
