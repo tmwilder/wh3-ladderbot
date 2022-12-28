@@ -7,7 +7,7 @@ create table if not exists users (
 
 create table if not exists match_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    requesting_user_id int NOT NULL,
+    requesting_user_id int UNIQUE NOT NULL,
     created_at timestamp,
     updated_at timestamp,
     request_range int NOT NULL COMMENT 'What is the rating range above and below that of the requester that can be matched into.',

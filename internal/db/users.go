@@ -11,7 +11,7 @@ type User struct {
 	CurrentRating   int
 }
 
-func createUser(conn *gorm.DB, user User) {
+func CreateUser(conn *gorm.DB, user User) {
 	conn.Exec("INSERT INTO users (discord_id, discord_username, current_rating) values (?, ?, ?)", user.DiscordId, user.DiscordUserName, user.CurrentRating)
 	if conn.Error != nil {
 		// TODO - How does this work with pooling and concurrency?
@@ -19,7 +19,7 @@ func createUser(conn *gorm.DB, user User) {
 	}
 }
 
-func getUser(conn *gorm.DB, discordId string) (result User) {
+func GetUser(conn *gorm.DB, discordId string) (result User) {
 	row := conn.Raw("SELECT id, discord_id, discord_username, current_rating FROM users WHERE discord_id = ?", discordId).Row()
 	if conn.Error != nil {
 		// TODO - How does this work with pooling and concurrency?
@@ -32,7 +32,7 @@ func getUser(conn *gorm.DB, discordId string) (result User) {
 	return result
 }
 
-func updateRating(conn *gorm.DB, discordId string, newRating int) {
+func UpdateUserRating(conn *gorm.DB, discordId string, newRating int) {
 	conn.Exec("UPDATE users SET current_rating = ? WHERE discord_id = ?", newRating, discordId)
 	if conn.Error != nil {
 		panic(conn.Error)

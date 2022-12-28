@@ -35,7 +35,7 @@ func GetConnectionParams() ConnectionParams {
 }
 
 func getMySQLDSN(params ConnectionParams) string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%s)/ladderbot", params.Username, params.Password, params.Host, params.Port)
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/ladderbot?parseTime=true", params.Username, params.Password, params.Host, params.Port)
 }
 
 func GetMySQLConnStr() string {
