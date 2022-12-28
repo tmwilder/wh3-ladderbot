@@ -15,7 +15,7 @@ func TestCreateMatchRequest(t *testing.T) {
 	testDiscordId := fmt.Sprintf("somediscordId%d", rand.Intn(1000000))
 
 	CreateUser(conn, User{0, testDiscordId, testDiscordUsername, DEFAULT_RATING})
-	user := GetUser(conn, testDiscordId)
+	_, user := GetUser(conn, testDiscordId)
 
 	matchRequest := MatchRequest{
 		0,
@@ -61,7 +61,7 @@ func TestCancelMatchRequest(t *testing.T) {
 	testDiscordId := fmt.Sprintf("somediscordId%d", rand.Intn(1000000))
 
 	CreateUser(conn, User{0, testDiscordId, testDiscordUsername, DEFAULT_RATING})
-	user := GetUser(conn, testDiscordId)
+	_, user := GetUser(conn, testDiscordId)
 
 	matchRequest := MatchRequest{
 		0,
