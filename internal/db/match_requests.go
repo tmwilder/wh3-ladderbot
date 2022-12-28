@@ -2,6 +2,7 @@ package db
 
 import (
 	"gorm.io/gorm"
+	"log"
 	"time"
 )
 
@@ -38,6 +39,12 @@ func CreateMatchRequest(conn *gorm.DB, request MatchRequest) (success bool) {
 			request.RequestedGameMode,
 			request.MatchRequestState,
 		)
+		// Get the auto incremented ID.
+		foundRequest, persistedRequest := GetMatchRequest(tx, request.RequestingUserId)
+		if foundRequest == false {
+			log.Printf("Unable to persist new match request: %v", request)
+		}
+		request.MatchRequestId = persistedRequest.MatchRequestId
 		createMatchRequestHistory(tx, request)
 		return nil
 	})
@@ -102,5 +109,19 @@ func updateMatchRequestState(conn *gorm.DB, matchRequestId int, newState string)
 }
 
 func createMatchRequestHistory(conn *gorm.DB, request MatchRequest) (success bool) {
+	conn.Exec(
+		"INSERT INTO match_requests_history (match_id, requesting_user_id, created_at, updated_at, request_range, requested_game_mode, match_request_state) values (?, ?, ?, ?, ?, ?, ?)",
+		request.MatchRequestId,
+		request.RequestingUserId,
+		request.CreatedAt,
+		request.UpdatedAt,
+		request.RequestRange,
+		request.RequestedGameMode,
+		request.MatchRequestState)
+
+	if conn.Error != nil {
+		log.Println(conn.Error)
+		return false
+	}
 	return true
 }

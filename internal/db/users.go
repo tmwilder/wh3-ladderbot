@@ -14,7 +14,6 @@ type User struct {
 func CreateUser(conn *gorm.DB, user User) {
 	conn.Exec("INSERT INTO users (discord_id, discord_username, current_rating) values (?, ?, ?)", user.DiscordId, user.DiscordUserName, user.CurrentRating)
 	if conn.Error != nil {
-		// TODO - How does this work with pooling and concurrency?
 		panic(conn.Error)
 	}
 }
