@@ -5,27 +5,36 @@ import (
 )
 
 type User struct {
-	DiscordId string
-	Email     string
+	UserId          int
+	DiscordId       string
+	DiscordUserName string
+	CurrentRating   int
 }
 
 func createUser(conn *gorm.DB, user User) {
-	conn.Exec("INSERT INTO users (discord_id, email) values (?, ?)", user.DiscordId, user.Email)
+	conn.Exec("INSERT INTO users (discord_id, discord_username, current_rating) values (?, ?, ?)", user.DiscordId, user.DiscordUserName, user.CurrentRating)
 	if conn.Error != nil {
-		// TODO - How does this work with pooling and concurrency
+		// TODO - How does this work with pooling and concurrency?
 		panic(conn.Error)
 	}
 }
 
-func getUser(conn *gorm.DB, email string) (result User) {
-	row := conn.Raw("SELECT email, discord_id FROM users WHERE email = ?", email).Row()
+func getUser(conn *gorm.DB, discordId string) (result User) {
+	row := conn.Raw("SELECT id, discord_id, discord_username, current_rating FROM users WHERE discord_id = ?", discordId).Row()
 	if conn.Error != nil {
-		// TODO - How does this work with pooling and concurrency
+		// TODO - How does this work with pooling and concurrency?
 		panic(conn.Error)
 	}
-	err := row.Scan(&result.Email, &result.DiscordId)
+	err := row.Scan(&result.UserId, &result.DiscordId, &result.DiscordUserName, &result.CurrentRating)
 	if err != nil {
 		panic(err)
 	}
 	return result
+}
+
+func updateRating(conn *gorm.DB, discordId string, newRating int) {
+	conn.Exec("UPDATE users SET current_rating = ? WHERE discord_id = ?", newRating, discordId)
+	if conn.Error != nil {
+		panic(conn.Error)
+	}
 }
