@@ -1,8 +1,6 @@
-package app
+package config
 
 import "os"
-
-const DISCORD_V10_API_BASE = "https://discord.com/api/v10"
 
 type DiscordAppConfig struct {
 	DiscordBotToken     string

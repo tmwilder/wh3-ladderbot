@@ -1,4 +1,4 @@
-package app
+package interactions
 
 import (
 	"discordbot/internal/db"

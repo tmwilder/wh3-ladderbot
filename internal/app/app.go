@@ -1,14 +1,14 @@
 package app
 
 import (
+	"discordbot/internal/app/discord"
 	"github.com/gin-gonic/gin"
 )
 
 func App() {
 	r := gin.Default()
-	r.GET("/view", helloHandler)
 	r.POST("/commands", installSlashCommandsHandler)
-	r.POST("/interactions", interactionsHandler)
+	r.POST("/interactions", discord.InteractionsHandler)
 
 	err := r.Run()
 	if err != nil {
