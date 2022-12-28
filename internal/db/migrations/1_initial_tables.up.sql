@@ -18,14 +18,14 @@ create table if not exists match_requests (
 
 create table if not exists match_requests_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    match_id int NOT NULL,
+    match_request_id int NOT NULL,
     requesting_user_id int NOT NULL,
     created_at timestamp,
     updated_at timestamp,
     request_range int NOT NULL COMMENT 'What is the rating range above and below that of the requester that can be matched into.',
     requested_game_mode varchar(255) NOT NULL COMMENT 'Serialized representation of game modes the player requested. At start just bo1, bo3, all.',
     match_request_state varchar(12) COMMENT 'QUEUED | MATCHED | CANCELLED',
-    INDEX (match_id),
+    INDEX (match_request_id),
     INDEX (requesting_user_id),
     INDEX (created_at),
     INDEX (requested_game_mode),

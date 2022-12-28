@@ -96,21 +96,76 @@ func CompleteRequests(conn *gorm.DB, matchRequest1 int, matchRequest2 int) (succ
 /*
 CancelRequest remove the match request from queue.
 */
-func CancelRequest(conn *gorm.DB, matchRequest1 int) (success bool) {
-	return true
+func CancelRequest(conn *gorm.DB, userId int) (success bool) {
+	// Create the new match and also its history record as one db txn
+	err := conn.Transaction(func(tx *gorm.DB) error {
+		foundRequest, matchRequest := GetMatchRequest(tx, userId)
+		if foundRequest == false {
+			log.Printf("Unable to find match request for player: %d", userId)
+			success = false
+			return nil
+		}
+
+		matchRequest.MatchRequestState = MATCH_REQUEST_STATE_CANCELLED
+		matchRequest.UpdatedAt = time.Now()
+		createMatchRequestHistory(tx, matchRequest)
+		deleteMatchRequest(tx, matchRequest.MatchRequestId)
+		return nil
+	})
+	if err != nil {
+		return false
+	}
+	return success
 }
 
-func GetMatchRequestHistory(conn *gorm.DB, matchId int) (matchRequests []MatchRequest) {
-	return []MatchRequest{}
+func GetMatchRequestHistory(conn *gorm.DB, matchRequestId int) (matchRequests []MatchRequest) {
+	rows, err := conn.Raw("SELECT match_request_id, requesting_user_id, created_at, updated_at, request_range, requested_game_mode, match_request_state FROM match_requests_history WHERE match_request_id = ? ORDER BY updated_at ASC", matchRequestId).Rows()
+	if err != nil {
+		panic(err)
+	}
+
+	if conn.Error != nil {
+		panic(conn.Error)
+	}
+
+	for rows.Next() {
+		matchRequest := MatchRequest{}
+		err := rows.Scan(
+			&matchRequest.MatchRequestId,
+			&matchRequest.RequestingUserId,
+			&matchRequest.CreatedAt,
+			&matchRequest.UpdatedAt,
+			&matchRequest.RequestRange,
+			&matchRequest.RequestedGameMode,
+			&matchRequest.MatchRequestState)
+
+		if err != nil {
+			log.Printf("Unable to read history row for matchRequest %d: %v", matchRequestId, err)
+		}
+		matchRequests = append(matchRequests, matchRequest)
+	}
+	if err != nil {
+		panic(err)
+	}
+	return matchRequests
 }
 
 func updateMatchRequestState(conn *gorm.DB, matchRequestId int, newState string) (success bool) {
 	return true
 }
 
+func deleteMatchRequest(conn *gorm.DB, matchRequestId int) (success bool) {
+	conn.Exec("DELETE FROM match_requests WHERE id = ?", matchRequestId)
+	if conn.Error != nil {
+		log.Println(conn.Error)
+		return false
+	}
+	return true
+}
+
 func createMatchRequestHistory(conn *gorm.DB, request MatchRequest) (success bool) {
 	conn.Exec(
-		"INSERT INTO match_requests_history (match_id, requesting_user_id, created_at, updated_at, request_range, requested_game_mode, match_request_state) values (?, ?, ?, ?, ?, ?, ?)",
+		"INSERT INTO match_requests_history (match_request_id, requesting_user_id, created_at, updated_at, request_range, requested_game_mode, match_request_state) values (?, ?, ?, ?, ?, ?, ?)",
 		request.MatchRequestId,
 		request.RequestingUserId,
 		request.CreatedAt,

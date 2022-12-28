@@ -41,4 +41,14 @@ func TestCreateMatchRequest(t *testing.T) {
 	if persistedRequest.RequestingUserId != user.UserId {
 		t.Error("Persisted request value does not equal requesting user.")
 	}
+
+	history := GetMatchRequestHistory(conn, persistedRequest.MatchRequestId)
+
+	if len(history) != 1 {
+		t.Errorf("Got history of len %d instead of 1.", len(history))
+	}
+
+	if history[0].MatchRequestId != persistedRequest.MatchRequestId {
+		t.Errorf("Expected match_request_id in history of %d but got %d", persistedRequest.MatchRequestId, history[0].MatchRequestId)
+	}
 }
