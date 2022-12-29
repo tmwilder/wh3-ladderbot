@@ -1,25 +1,30 @@
 package main
 
 import (
+	"context"
+	"discordbot/internal/app"
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/awslabs/aws-lambda-go-api-proxy/gin"
+	"log"
 )
 
-type book struct {
-	ISBN   string `json:"isbn"`
-	Title  string `json:"title"`
-	Author string `json:"author"`
+var ginLambda *ginadapter.GinLambda
+
+func init() {
+	// stdout and stderr are sent to AWS CloudWatch Logs
+	log.Printf("Cold starting Gin...")
+	r := app.GetGin()
+	ginLambda = ginadapter.New(r)
 }
 
-func show() (*book, error) {
-	bk := &book{
-		ISBN:   "978-1420931693",
-		Title:  "The Republic",
-		Author: "Plato",
-	}
-
-	return bk, nil
+func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	// If no name is provided in the HTTP request body, throw an error
+	return ginLambda.ProxyWithContext(ctx, req)
 }
 
 func main() {
-	lambda.Start(show)
+	// TODO secrets manager integration to populate env variables once we go from test app to prod.
+	// For this model just env also fine.
+	lambda.Start(Handler)
 }
