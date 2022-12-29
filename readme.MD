@@ -38,3 +38,4 @@ Other useful operations:
 7. Configure real bot and deploy to prod
 8. Find first test channel - probably RTK - do a ladder trial
 9. Set up some admin functionality for fixing oops and such
+10. Add event support
