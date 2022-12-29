@@ -30,7 +30,11 @@ Other useful operations:
 
 ## TODO:
 1. Clean up some of the routing/request handling/error handling ergonomics so that our use of gin is less janky
-2. Figure out AWS or GCP hosting story
-3. Deploy to prod
-4. Find first test channel - probably RTK - do a ladder trial
-5. Set up some admin functionality for fixing oops and such
+2. Add support for random map selections and storage of map pool
+3. Make the messaging and dms back to players make sense for our lifecycle
+4. Set up a way to communicate the map pool to a channel
+5. Set up a way to pull and communicate the leaderboard back to a channel
+6. Figure out AWS or GCP hosting story
+7. Configure real bot and deploy to prod
+8. Find first test channel - probably RTK - do a ladder trial
+9. Set up some admin functionality for fixing oops and such
