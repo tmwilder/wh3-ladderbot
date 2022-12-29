@@ -90,7 +90,7 @@ func GetUserRatingsHistory(conn *gorm.DB, userId int, limit int) (ratings []User
 			user_id = ? AND
 			is_tombstoned = false
 		ORDER BY
-			created_at, id DESC
+			id DESC
 		LIMIT ?`,
 		userId,
 		limit).Rows()
