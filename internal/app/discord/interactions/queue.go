@@ -8,7 +8,11 @@ import (
 )
 
 func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage string) {
-	queueValue := interaction.Data.Options[0].Value
+	queueValue := 300
+	if len(interaction.Data.Options) > 0 {
+		queueValue = interaction.Data.Options[0].Value
+	}
+
 	discordUserId := interaction.Member.User.Id
 	discordUserName := interaction.Member.User.Username
 
