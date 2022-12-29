@@ -12,6 +12,16 @@ import (
 	https://discord.com/developers/docs/interactions/application-commands#authorizing-your-application
 */
 func installSlashCommandsHandler(c *gin.Context) {
-	commands.InstallGlobalCommands(config.GetDiscordAppConfig())
+	appConfig := config.GetAppConfig()
+	requestKey, foundKey := c.GetQuery("admin_key")
+	if !foundKey {
+		c.JSON(http.StatusUnauthorized, "Must supply query param admin key.")
+		return
+	}
+	if requestKey != appConfig.AdminKey {
+		c.JSON(http.StatusUnauthorized, "Must supply correct query param admin key.")
+		return
+	}
+	commands.InstallGlobalCommands(config.GetAppConfig())
 	c.JSON(http.StatusOK, nil)
 }

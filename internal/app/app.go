@@ -2,6 +2,7 @@ package app
 
 import (
 	"discordbot/internal/app/discord"
+	"discordbot/internal/db"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,6 +22,7 @@ func App() {
 func GetGin() (g *gin.Engine) {
 	g = gin.Default()
 	g.POST("/commands", installSlashCommandsHandler)
+	g.POST("/migrate", db.MigrationHandler)
 	g.POST("/interactions", discord.InteractionsHandler)
 	return g
 }

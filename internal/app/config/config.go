@@ -2,13 +2,14 @@ package config
 
 import "os"
 
-type DiscordAppConfig struct {
+type AppConfig struct {
 	DiscordBotToken     string
 	DiscordAppId        string
 	DiscordAppPublicKey string
+	AdminKey            string
 }
 
-func GetDiscordAppConfig() DiscordAppConfig {
+func GetAppConfig() AppConfig {
 	botToken := os.Getenv("DISCORD_BOT_TOKEN")
 	if botToken == "" {
 		panic("Must provide DISCORD_BOT_TOKEN as env var.")
@@ -21,9 +22,14 @@ func GetDiscordAppConfig() DiscordAppConfig {
 	if publicKey == "" {
 		panic("Must provide DISCORD_PUBLIC_KEY as env var.")
 	}
-	return DiscordAppConfig{
+	adminKey := os.Getenv("ADMIN_KEY")
+	if publicKey == "" {
+		panic("Must provide ADMIN_KEY as env var.")
+	}
+	return AppConfig{
 		DiscordBotToken:     botToken,
 		DiscordAppId:        appId,
 		DiscordAppPublicKey: publicKey,
+		AdminKey:            adminKey,
 	}
 }

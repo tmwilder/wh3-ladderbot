@@ -5,6 +5,7 @@ import (
 	"discordbot/internal/app/config"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -53,7 +54,7 @@ const (
 		Uploads our commands that are common to all installs of our app to the Discord bot defined
 		by env variables. Defines this with the static config in this file.
 */
-func InstallGlobalCommands(config config.DiscordAppConfig) {
+func InstallGlobalCommands(config config.AppConfig) {
 	commands := []GlobalCommandPost{
 		{
 			Name:        Queue,
@@ -103,10 +104,11 @@ func InstallGlobalCommands(config config.DiscordAppConfig) {
 	}
 }
 
-func upsertCommand(config config.DiscordAppConfig, commandBody GlobalCommandPost) {
+func upsertCommand(config config.AppConfig, commandBody GlobalCommandPost) {
 	url := fmt.Sprintf("%s/applications/%s/commands", DiscordV10AppBase, config.DiscordAppId)
 
 	client := &http.Client{}
+
 	data, err := json.Marshal(commandBody)
 	if err != nil {
 		panic(err)
@@ -114,13 +116,22 @@ func upsertCommand(config config.DiscordAppConfig, commandBody GlobalCommandPost
 	reader := bytes.NewReader(data)
 	req, err := http.NewRequest(http.MethodPost, url, reader)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bot %s", config.DiscordBotToken))
 	resp, err := client.Do(req)
 
-	defer resp.Body.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(resp.Body)
 
 	body, readErr := httputil.DumpResponse(resp, true)
 

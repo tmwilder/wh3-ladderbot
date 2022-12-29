@@ -23,7 +23,7 @@ type PingResponse struct {
 }
 
 func InteractionsHandler(c *gin.Context) {
-	appConfig := config.GetDiscordAppConfig()
+	appConfig := config.GetAppConfig()
 
 	decodedKey, err := hex.DecodeString(appConfig.DiscordAppPublicKey)
 	if err != nil {
