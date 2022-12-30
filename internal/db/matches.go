@@ -106,7 +106,7 @@ func CreateMatch(conn *gorm.DB, match Match) (success bool) {
 			return nil
 		}
 		// Get the auto incremented ID.
-		foundRequest, persistedMatch := GetCurrentMatch(tx, match.P1UserId)
+		foundRequest, persistedMatch := GetMostRecentMatch(tx, match.P1UserId)
 		if foundRequest == false {
 			log.Printf("Unable to find freshly persisted match so we cannot create history record and will bail: %v", match)
 			success = false

@@ -55,3 +55,5 @@ public call / ease of sec impl tradeoff.
 5. Find first test channel - probably RTK - do a ladder trial
 6. Set up some admin functionality for fixing oops and such
 7. Add event support
+8. Add automated dequeue
+9. Ping the players when they are paid
