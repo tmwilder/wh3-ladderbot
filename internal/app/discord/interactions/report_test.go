@@ -29,7 +29,7 @@ func setUpTestMatch(conn *gorm.DB) (user1 db.User, user2 db.User, match db.Match
 		CreatedAt:         time.Now(),
 		UpdatedAt:         time.Now(),
 		RequestRange:      100,
-		RequestedGameMode: db.GameModeBo1,
+		RequestedGameMode: db.Bo1,
 		MatchRequestState: db.MatchRequestStateQueued,
 	}
 
@@ -38,7 +38,7 @@ func setUpTestMatch(conn *gorm.DB) (user1 db.User, user2 db.User, match db.Match
 		CreatedAt:         time.Now(),
 		UpdatedAt:         time.Now(),
 		RequestRange:      100,
-		RequestedGameMode: db.GameModeBo1,
+		RequestedGameMode: db.Bo1,
 		MatchRequestState: db.MatchRequestStateQueued,
 	}
 

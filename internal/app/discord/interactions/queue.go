@@ -4,6 +4,7 @@ import (
 	"discordbot/internal/db"
 	"fmt"
 	"gorm.io/gorm"
+	"strings"
 	"time"
 )
 
@@ -35,15 +36,19 @@ func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage
 	if foundEntry {
 		return false, "Found existing queued match request - if you want to change your elo range dequeue and requeue at the new range, otherwise stand by and you will be paired when a matching player joins!"
 	}
-	// TODO check for unfinished match.
+
+	foundActiveMatch, _ := db.GetCurrentMatch(conn, user.UserId)
+	if foundActiveMatch {
+		return false, "You appear to have a still open match - please report results for that before queuing again."
+	}
 
 	// Now with assurances of a registered user and no existing entry - try to queue their entry
 	newMatchRequest := db.MatchRequest{
 		RequestingUserId:  user.UserId,
 		CreatedAt:         time.Now(),
 		UpdatedAt:         time.Now(),
-		RequestRange:      queueValue,     // TODO fix client param tooltip
-		RequestedGameMode: db.GameModeAll, // TODO add as client param
+		RequestRange:      queueValue, // TODO fix client param tooltip
+		RequestedGameMode: db.All,     // TODO add as client param
 		MatchRequestState: db.MatchRequestStateQueued,
 	}
 	didQueueMatch := db.CreateMatchRequest(conn, newMatchRequest)
@@ -59,8 +64,17 @@ func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage
 		db.CreateMatchFromRequests(conn, bestPairing, currentPersistedMatchRequest)
 
 		_, opponent := db.GetUserById(conn, bestPairing.RequestingUserId)
+
+		maps := assignMaps(conn, bestPairing.RequestedGameMode)
+
+		mapStr := "[" + strings.Join(maps, ", ") + "]"
+
 		// TODO better msg here
-		// TODO also msg opponent and broadcast channel
-		return true, fmt.Sprintf("You joined the queue and were paired with %s", opponent.DiscordUserName)
+		return true, fmt.Sprintf(
+			`%s joined the queue and was paired against %s. Please play a %s match and report the results when done. Your randomly assigned map order will be: %s.`,
+			user.DiscordUserName,
+			opponent.DiscordUserName,
+			bestPairing.RequestedGameMode,
+			mapStr)
 	}
 }

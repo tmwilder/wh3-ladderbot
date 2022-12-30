@@ -37,3 +37,15 @@ func TestFindBestMatchEarlyOption(t *testing.T) {
 	)
 	assert.Equal(t, bestMatch.MatchRequestId, 1, "Expected best match to be a poor rating match that had been in queue for 20m but it was a different one.")
 }
+
+func TestAssignMaps(t *testing.T) {
+	conn := db.GetGorm(db.GetTestMysSQLConnStr())
+	db.InsertMapSet(conn, []string{"a", "b", "c", "d", "e", "f"}, db.Bo3)
+	db.InsertMapSet(conn, []string{"a", "b", "c", "d", "e", "f"}, db.Bo1)
+
+	maps := assignMaps(conn, db.Bo3)
+	assert.Len(t, maps, 3)
+
+	maps2 := assignMaps(conn, db.Bo1)
+	assert.Len(t, maps2, 1)
+}

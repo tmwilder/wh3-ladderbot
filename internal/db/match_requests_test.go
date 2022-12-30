@@ -24,7 +24,7 @@ func TestCreateMatchRequest(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		200,
-		GameModeAll,
+		All,
 		MatchRequestStateQueued,
 	}
 
@@ -71,7 +71,7 @@ func TestCancelMatchRequest(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		200,
-		GameModeAll,
+		All,
 		MatchRequestStateQueued,
 	}
 
@@ -147,7 +147,7 @@ func TestFindCandidatePairings(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		49,
-		GameModeBo1,
+		Bo1,
 		MatchRequestStateQueued,
 	}
 
@@ -157,7 +157,7 @@ func TestFindCandidatePairings(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		150,
-		GameModeBo1,
+		Bo1,
 		MatchRequestStateQueued,
 	}
 
@@ -167,7 +167,7 @@ func TestFindCandidatePairings(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		300,
-		GameModeAll,
+		All,
 		MatchRequestStateQueued,
 	}
 
@@ -177,7 +177,7 @@ func TestFindCandidatePairings(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		500,
-		GameModeBo3,
+		Bo3,
 		MatchRequestStateQueued,
 	}
 

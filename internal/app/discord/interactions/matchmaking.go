@@ -2,7 +2,9 @@ package interactions
 
 import (
 	"discordbot/internal/db"
+	"gorm.io/gorm"
 	"math"
+	"math/rand"
 	"time"
 )
 
@@ -38,16 +40,45 @@ func findBestPairing(matchRequest db.MatchRequest, requesterRating int, candidat
 
 			bestMatch = candidate.OpponentMatchRequest
 
-			if matchRequest.RequestedGameMode == db.GameModeAll && bestMatch.RequestedGameMode == db.GameModeAll {
+			if matchRequest.RequestedGameMode == db.All && bestMatch.RequestedGameMode == db.All {
 				// Set game mode to opponent's preference if we specified all.
-				bestMatch.RequestedGameMode = db.GameModeBo3
-			} else if matchRequest.RequestedGameMode == db.GameModeAll {
+				bestMatch.RequestedGameMode = db.Bo3
+			} else if matchRequest.RequestedGameMode == db.All {
 				// Nothing to do since game mode already correct.
-			} else if bestMatch.RequestedGameMode == db.GameModeAll {
+			} else if bestMatch.RequestedGameMode == db.All {
 				// Set game mode to request if opponent specified all.
 				bestMatch.RequestedGameMode = matchRequest.RequestedGameMode
 			}
 		}
 	}
 	return bestMatch
+}
+
+func assignMaps(conn *gorm.DB, gameMode db.GameMode) (maps []string) {
+	howMany := 1
+	if gameMode == db.Bo3 {
+		howMany = 3
+	}
+	foundMaps, mapSet := db.GetLatestMapSet(conn, gameMode)
+
+	if !foundMaps {
+		panic("Unable to find maps.")
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	for len(maps) < howMany {
+		selection := mapSet.Maps[rand.Intn(len(mapSet.Maps))]
+		noCollision := true
+		for _, v := range maps {
+			if selection == v {
+				noCollision = false
+				break
+			}
+		}
+		if noCollision == true {
+			maps = append(maps, selection)
+		}
+	}
+	return maps
 }

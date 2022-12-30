@@ -11,10 +11,6 @@ const MatchRequestStateQueued = "queued"
 const MatchRequestStateCancelled = "cancelled"
 const MatchRequestStateCompleted = "completed"
 
-const GameModeBo1 = "bo1"
-const GameModeBo3 = "bo3"
-const GameModeAll = "all"
-
 const MaxSecondsInQueue = 30 * 60
 
 type MatchRequest struct {
@@ -23,7 +19,7 @@ type MatchRequest struct {
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 	RequestRange      int
-	RequestedGameMode string
+	RequestedGameMode GameMode
 	MatchRequestState string
 }
 
@@ -130,7 +126,7 @@ func FindCandidatePairings(conn *gorm.DB, request MatchRequest) (response []Cand
 			LIMIT 100`,
 		sql.Named("requester_user_id", request.RequestingUserId),
 		sql.Named("requested_game_mode", request.RequestedGameMode),
-		sql.Named("game_mode_all", GameModeAll),
+		sql.Named("game_mode_all", All),
 		sql.Named("request_rating_range", request.RequestRange),
 	).Rows()
 

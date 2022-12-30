@@ -31,7 +31,7 @@ func TestCreateMatchFromRequests(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		100,
-		GameModeBo1,
+		Bo1,
 		MatchRequestStateQueued,
 	}
 
@@ -41,7 +41,7 @@ func TestCreateMatchFromRequests(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		100,
-		GameModeAll,
+		All,
 		MatchRequestStateQueued,
 	}
 

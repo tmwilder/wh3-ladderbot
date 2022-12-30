@@ -36,7 +36,7 @@ func CreateMatchFromRequests(conn *gorm.DB, matchRequest1 MatchRequest, matchReq
 				CreatedAt:        time.Now(),
 				UpdatedAt:        time.Now(),
 				MatchState:       Matched,
-				GameMode:         GameMode(matchRequest1.RequestedGameMode),
+				GameMode:         matchRequest1.RequestedGameMode,
 				P1UserId:         matchRequest1.RequestingUserId,
 				P2UserId:         matchRequest2.RequestingUserId,
 				P1MatchRequestId: matchRequest1.MatchRequestId,
