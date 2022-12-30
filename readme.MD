@@ -49,10 +49,9 @@ public call / ease of sec impl tradeoff.
 
 ## TODO:
 1. Clean up some of the routing/request handling/error handling ergonomics so that our use of gin is less janky
-2. Add support for random map selections and storage of map pool
-3. Make the messaging and dms back to players make sense for our lifecycle
-4. Set up a way to communicate the map pool to a channel
-5. Set up a way to pull and communicate the leaderboard back to a channel
-6. Find first test channel - probably RTK - do a ladder trial
-7. Set up some admin functionality for fixing oops and such
-8. Add event support
+2. Make the messaging and dms back to players make sense for our lifecycle
+3. Set up a way to communicate the map pool to a channel
+4. Set up a way to pull and communicate the leaderboard back to a channel
+5. Find first test channel - probably RTK - do a ladder trial
+6. Set up some admin functionality for fixing oops and such
+7. Add event support
