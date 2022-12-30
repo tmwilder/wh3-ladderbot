@@ -25,6 +25,25 @@ Other useful operations:
 `docker compose -down` - Takes down the instances
 `docker compose -down --volumes` - Takes down the instances and deletes the backing store for MysQL.
 
+## Prod Operations
+
+### Deploying
+To deploy to prod - get access to the parent AWS account, build locally, and upload the resulting file. This is manual
+right now and if we get a few folks working on this we'll streamline further.
+
+### Migrations
+Add a new migation to internal/db/migrations and test it on local. Then deploy to the prod lambda.
+
+Then post to `api.mtgshuffle.com/migrate?admin_key=<key>` with the admin key stored in our aws secrets. This is not mega
+secure but is good enough for the hobby level of this project.
+
+### Uploading new bot slash commands.
+Add your slash command to commands.go, test on your local app, then deploy to prod lambda and post to 
+`api.mtgshuffle.com/migrate?admin_key=<key>` - just as with migrations you can find the key in AWS.
+
+Both this and the migrations resource are not actually particularly sensitive so the key scheme is a convenience of
+public call / ease of sec impl tradeoff.
+
 ## Resources
 *[Design Doc](https://docs.google.com/document/d/11ivp-l3DZtG7wLEwbGDa3vjmKztld-1AUIIneHfWqaE/edit?usp=sharing)
 
