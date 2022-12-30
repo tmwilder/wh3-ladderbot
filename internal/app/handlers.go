@@ -2,10 +2,13 @@ package app
 
 import (
 	"discordbot/internal/app/config"
+	"discordbot/internal/app/discord/api"
 	"discordbot/internal/app/discord/commands"
 	"discordbot/internal/db"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"io"
 	"net/http"
 )
@@ -80,4 +83,35 @@ func setMapsHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, "Maps updated.")
+}
+
+func updateLeaderBoardHandler(c *gin.Context) {
+	authorized := AuthorizeAdminAction(c)
+	if !authorized {
+		return
+	}
+	conn := db.GetDbConn()
+
+	postMonthlyWinStandings(conn)
+	postEloStandings(conn)
+}
+
+func postMonthlyWinStandings(conn *gorm.DB) {
+	usersWithStats := db.GetMonthlyWinLeaderboard(conn)
+	leaderBoardLines := []string{"Total wins this month: \n"}
+	for i, v := range usersWithStats {
+		line := fmt.Sprintf("%d - %s - %dW/%dL", i+1, v.User.DiscordUserName, v.Wins, v.Losses)
+		leaderBoardLines = append(leaderBoardLines, line)
+	}
+	api.ReplaceChannelContents(config.GetAppConfig().HomeGuildId, "leaderboard", leaderBoardLines)
+}
+
+func postEloStandings(conn *gorm.DB) {
+	usersWithStats := db.GetEloLeaderboard(conn)
+	leaderBoardLines := []string{"All time top Elo Ratings: \n"}
+	for i, v := range usersWithStats {
+		line := fmt.Sprintf("%d - %s - Elo %d - %dW/%dL", i+1, v.User.DiscordUserName, v.User.CurrentRating, v.Wins, v.Losses)
+		leaderBoardLines = append(leaderBoardLines, line)
+	}
+	api.ReplaceChannelContents(config.GetAppConfig().HomeGuildId, "elo-standings", leaderBoardLines)
 }
