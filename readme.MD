@@ -14,8 +14,8 @@ To get local development running:
 4. Set DB_USERNAME=root, DB_PASSWORD=password, DB_HOST=127.0.0.1, DB_PORT=3306 in env vars and fire off - `go run ./cmd/migrate/migrate.go`.
 5. Connect to localhost:3306 as root:password and check that tables were created.
 6. Run `go test internal db` to check connectivity.
-7. Follow instructions to set up a basic Discord Bot and get your public key, app id, and bot token.
-8. Set discord's variables as DISCORD_APP_ID, DISCORD_PUBLIC_KEY, DISCORD_BOT_TOKEN in env vars, do the same for DB info from step 4, set some arbitrary key for ADMIN_KEY, and launch the api server through the api command.
+7. Follow instructions to set up a basic Discord Bot and get your public key, app id, and bot token. Also get the Guild ID of your test channel.
+8. Set discord's variables as DISCORD_APP_ID, DISCORD_PUBLIC_KEY, DISCORD_BOT_TOKEN, DISCORD_HOME_GUILD_ID in env vars, do the same for DB info from step 4, set some arbitrary key for ADMIN_KEY, and launch the api server through the api command.
 9. Go read [set up Ngrok](https://github.com/discord/discord-example-app#set-up-interactivity) and set that up.
 10. Install your test app to any discord channel.
 11. POST to localhost:8080/commands?ADMIN_KEY=<pull from step 8> to install this app's commands as global commands to your test bot.
