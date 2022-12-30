@@ -39,8 +39,12 @@ func ReplaceChannelContents(guildId string, channelName string, contentLines []s
 
 	// Delete all posts in the channel
 	if (len(messages)) > 0 {
-		// TODO evidently the discord bulk delete cannot handle exactly one msg. Need to fix.
-		deleteOurMessagesInChannel(channel.ChannelId, messages)
+		if len(messages) == 1 {
+			// Evidently the discord bulk delete cannot handle exactly one msg and you must call the per-message API.
+			deleteOneMessage(channel.ChannelId, messages[0].MessageId)
+		} else {
+			deleteOurMessagesInChannel(channel.ChannelId, messages)
+		}
 	}
 
 	// Chunk up contents into N posts of max post length and post them
@@ -108,6 +112,15 @@ func deleteOurMessagesInChannel(channelId string, messages []Message) (success b
 	}
 	statusCode, _ := callDiscord(incrementalUrl, http.MethodPost, body)
 
+	if statusCode != http.StatusNoContent {
+		panic(fmt.Sprintf("Unable to delete messages - got non-204 code: %d", statusCode))
+	}
+	return true
+}
+
+func deleteOneMessage(channelId string, messageId string) (success bool) {
+	incrementalUrl := fmt.Sprintf("channels/%s/messages/%s", channelId, messageId)
+	statusCode, _ := callDiscord(incrementalUrl, http.MethodDelete, []byte{})
 	if statusCode != http.StatusNoContent {
 		panic(fmt.Sprintf("Unable to delete messages - got non-204 code: %d", statusCode))
 	}
