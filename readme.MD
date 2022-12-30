@@ -53,8 +53,6 @@ public call / ease of sec impl tradeoff.
 3. Make the messaging and dms back to players make sense for our lifecycle
 4. Set up a way to communicate the map pool to a channel
 5. Set up a way to pull and communicate the leaderboard back to a channel
-6. Figure out AWS or GCP hosting story
-7. Configure real bot and deploy to prod
-8. Find first test channel - probably RTK - do a ladder trial
-9. Set up some admin functionality for fixing oops and such
-10. Add event support
+6. Find first test channel - probably RTK - do a ladder trial
+7. Set up some admin functionality for fixing oops and such
+8. Add event support
