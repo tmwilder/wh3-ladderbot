@@ -97,6 +97,10 @@ func setMapsHandler(c *gin.Context) {
 		"3. When done you or your opponent reports results with `/report win` or `/report loss`. Your ratings and records will be updated and you can immediately queue again after reporting.",
 		"4. If you want to leave the queue before getting matched you can use `/dequeue`. If you want to cancel a match without playing it you can use `/report cancel`. If you or your opponent puts in the wrong match results you can fix this by just reporting again with the right result, which will overwrite your previous entry.\n",
 
+		"**Leaderboard:**",
+		"Players compete to have the most wins each month. On the first of the month we reset. Current standings are visible in #leaderboard.",
+		"We also track elo ratings for players so that we can do better matchmaking. These can be found in #elo-ratings.\n",
+
 		"**Bo3 Format:**",
 		"All games are Domination format.",
 		"-Pick & Ban; (P1= first player posted by the bot; P2= second player posted by the bot.)",
@@ -154,7 +158,7 @@ func postMonthlyWinStandings(conn *gorm.DB) {
 	usersWithStats := db.GetMonthlyWinLeaderboard(conn)
 	leaderBoardLines := []string{"Total wins this month: \n"}
 	for i, v := range usersWithStats {
-		line := fmt.Sprintf("%d - %s - %dW/%dL", i+1, v.User.DiscordUserName, v.Wins, v.Losses)
+		line := fmt.Sprintf("%d - %s - %dW / %dL", i+1, v.User.DiscordUserName, v.Wins, v.Losses)
 		leaderBoardLines = append(leaderBoardLines, line)
 	}
 	api.ReplaceChannelContents(config.GetAppConfig().HomeGuildId, "leaderboard", leaderBoardLines)
@@ -164,8 +168,8 @@ func postEloStandings(conn *gorm.DB) {
 	usersWithStats := db.GetEloLeaderboard(conn)
 	leaderBoardLines := []string{"All time top Elo Ratings: \n"}
 	for i, v := range usersWithStats {
-		line := fmt.Sprintf("%d - %s - Elo %d - %dW/%dL", i+1, v.User.DiscordUserName, v.User.CurrentRating, v.Wins, v.Losses)
+		line := fmt.Sprintf("%d - %s - Elo %d - %dW / %dL", i+1, v.User.DiscordUserName, v.User.CurrentRating, v.Wins, v.Losses)
 		leaderBoardLines = append(leaderBoardLines, line)
 	}
-	api.ReplaceChannelContents(config.GetAppConfig().HomeGuildId, "elo-standings", leaderBoardLines)
+	api.ReplaceChannelContents(config.GetAppConfig().HomeGuildId, "elo-ratings", leaderBoardLines)
 }
