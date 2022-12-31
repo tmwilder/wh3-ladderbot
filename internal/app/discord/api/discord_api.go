@@ -25,7 +25,7 @@ type MessageToPost struct {
 	Content string `json:"content"`
 }
 
-const maxMessageCharsLength = 1900
+const maxMessageCharsLength = 1800
 
 func ReplaceChannelContents(guildId string, channelName string, contentLines []string) {
 	// Select the channel matching our name
