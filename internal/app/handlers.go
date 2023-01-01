@@ -4,6 +4,7 @@ import (
 	"discordbot/internal/app/config"
 	"discordbot/internal/app/discord/api"
 	"discordbot/internal/app/discord/commands"
+	"discordbot/internal/app/discord/interactions"
 	"discordbot/internal/db"
 	"encoding/json"
 	"fmt"
@@ -152,6 +153,15 @@ func updateLeaderBoardHandler(c *gin.Context) {
 
 	postMonthlyWinStandings(conn)
 	postEloStandings(conn)
+}
+
+func expireMatchRequestsHandler(c *gin.Context) {
+	authorized := AuthorizeAdminAction(c)
+	if !authorized {
+		return
+	}
+	conn := db.GetDbConn()
+	interactions.ExpireMatchRequests(conn)
 }
 
 func postMonthlyWinStandings(conn *gorm.DB) {

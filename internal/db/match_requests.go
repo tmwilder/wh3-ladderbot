@@ -13,6 +13,8 @@ const MatchRequestStateCompleted = "completed"
 
 const MaxSecondsInQueue = 30 * 60
 
+const ExpiryTimeMinutes = 45
+
 type MatchRequest struct {
 	MatchRequestId    int
 	RequestingUserId  int
@@ -158,6 +160,48 @@ func FindCandidatePairings(conn *gorm.DB, request MatchRequest) (response []Cand
 		response = append(response, candidatePairing)
 	}
 	return response
+}
+
+func FindExpiredRequests(conn *gorm.DB, now time.Time) (result []MatchRequest) {
+	rows, err := conn.Raw(
+		`SELECT
+		id,
+		requesting_user_id,
+		created_at,
+		updated_at,
+		request_range,
+		requested_game_mode,
+		match_request_state
+	FROM match_requests 
+	WHERE (TIMESTAMPDIFF(MINUTE, created_at, ?) > 45) AND match_request_state = ?`, now, MatchRequestStateQueued).Rows()
+
+	if err != nil {
+		panic(err)
+	}
+
+	if conn.Error != nil {
+		panic(conn.Error)
+	}
+
+	for rows.Next() {
+		matchRequest := MatchRequest{}
+		err := rows.Scan(
+			&matchRequest.MatchRequestId,
+			&matchRequest.RequestingUserId,
+			&matchRequest.CreatedAt,
+			&matchRequest.UpdatedAt,
+			&matchRequest.RequestRange,
+			&matchRequest.RequestedGameMode,
+			&matchRequest.MatchRequestState)
+		if err != nil {
+			panic(err)
+		}
+		result = append(result, matchRequest)
+	}
+	if err != nil {
+		panic(err)
+	}
+	return result
 }
 
 /*

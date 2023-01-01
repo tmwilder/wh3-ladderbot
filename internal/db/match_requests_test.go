@@ -215,3 +215,69 @@ func TestFindCandidatePairings(t *testing.T) {
 	assert.Equal(t, pairings4[0].OpponentRating, user3.CurrentRating)
 	assert.Equal(t, pairings4[0].OpponentDiscordUsername, user3.DiscordUserName)
 }
+
+func TestFindExpiredMatches(t *testing.T) {
+	conn := GetGorm(GetTestMysSQLConnStr())
+
+	now := time.Now()
+
+	threeYearsAgo := now.AddDate(-3, 0, 0)
+	oneMinuteFromExpiring := threeYearsAgo.Add(-(time.Minute*ExpiryTimeMinutes*45 - time.Minute))
+	oneMinutePastExpiring := threeYearsAgo.Add(-(time.Minute*ExpiryTimeMinutes*45 + time.Minute))
+
+	var users []User
+
+	rand.Seed(time.Now().UnixNano())
+
+	for i := 0; i < 2; i++ {
+		testDiscordUsername := fmt.Sprintf("coolsk8r1990%d", rand.Intn(1000000))
+		testDiscordId := fmt.Sprintf("somediscordId%d", rand.Intn(1000000))
+		CreateUser(conn, User{0, testDiscordId, testDiscordUsername, DEFAULT_RATING})
+		_, user := GetUserByDiscordId(conn, testDiscordId)
+		users = append(users, user)
+	}
+
+	expiredRequest := MatchRequest{
+		0,
+		users[0].UserId,
+		oneMinutePastExpiring,
+		time.Now(),
+		200,
+		All,
+		MatchRequestStateQueued,
+	}
+	CreateMatchRequest(conn, expiredRequest)
+	_, persistedExpiredRequest := GetMatchRequest(conn, users[0].UserId)
+
+	notExpiredRequest := MatchRequest{
+		0,
+		users[1].UserId,
+		oneMinuteFromExpiring,
+		time.Now(),
+		200,
+		All,
+		MatchRequestStateQueued,
+	}
+	CreateMatchRequest(conn, notExpiredRequest)
+	GetMatchRequest(conn, users[1].UserId)
+
+	expiredRequests := FindExpiredRequests(conn, threeYearsAgo)
+
+	foundExpiredRequest := false
+
+	for _, v := range expiredRequests {
+		if v.MatchRequestId == notExpiredRequest.MatchRequestId {
+			t.Errorf("Found not expired request in expired results, the expiration check is bugged.")
+		}
+		if v.MatchRequestId == persistedExpiredRequest.MatchRequestId {
+			foundExpiredRequest = true
+		}
+	}
+
+	if foundExpiredRequest == false {
+		t.Errorf("Unable to find expired request, the expiration check is bugged.")
+	}
+
+	CancelMatchRequest(conn, users[0].UserId)
+	CancelMatchRequest(conn, users[1].UserId)
+}

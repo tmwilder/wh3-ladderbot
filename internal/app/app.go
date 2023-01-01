@@ -22,6 +22,7 @@ func GetGin() (g *gin.Engine) {
 	g = gin.Default()
 	g.POST("/commands", installSlashCommandsHandler)
 	g.POST("/maps", setMapsHandler)
+	g.POST("/match-requests/expire", expireMatchRequestsHandler)
 	g.POST("/migrate", migrationHandler)
 	g.POST("/interactions", discord.InteractionsHandler)
 	g.POST("/leaderboard", updateLeaderBoardHandler)

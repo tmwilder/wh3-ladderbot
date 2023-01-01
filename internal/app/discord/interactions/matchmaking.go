@@ -1,7 +1,9 @@
 package interactions
 
 import (
+	"discordbot/internal/app/discord/api"
 	"discordbot/internal/db"
+	"fmt"
 	"gorm.io/gorm"
 	"math"
 	"math/rand"
@@ -52,6 +54,38 @@ func findBestPairing(matchRequest db.MatchRequest, requesterRating int, candidat
 		}
 	}
 	return bestMatch
+}
+
+func ExpireMatchRequests(conn *gorm.DB) (success bool) {
+	now := time.Now()
+	expiredRequests := db.FindExpiredRequests(conn, now)
+	messages := []string{}
+	for _, v := range expiredRequests {
+		success := db.CancelMatchRequest(conn, v.RequestingUserId)
+		if success {
+			_, user := db.GetUserById(conn, v.RequestingUserId)
+			messages = append(messages, fmt.Sprintf("Dequeued match request for user %s because it was 45m stale. Please requeue if you'd like to keep playing!\n", user.DiscordUserName))
+		}
+	}
+	if len(messages) > 0 {
+		// Chunk into 1-2 bulk posts to avoid hitting rate limits.
+		collatedMessages := []string{}
+		collatedMessage := ""
+		for _, message := range messages {
+			if len(collatedMessage) <= 1900 {
+				collatedMessage += message
+			} else {
+				collatedMessages = append(collatedMessages, collatedMessage)
+				collatedMessage += message
+			}
+		}
+		collatedMessages = append(collatedMessages, collatedMessage)
+
+		for _, v := range collatedMessages {
+			api.CrossPostMessageByName(LadderFeedChannel, v)
+		}
+	}
+	return true
 }
 
 func assignMaps(conn *gorm.DB, gameMode db.GameMode) (maps []string) {

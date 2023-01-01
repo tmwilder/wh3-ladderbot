@@ -52,7 +52,7 @@ func InteractionsHandler(c *gin.Context) {
 				// Only announce things that are worth announcing.
 				// Generally this means elo changes and queue changes do report and error states and operation
 				// failures don't get reported.
-				api.CrossPostMessageByName("ladder-feed", message)
+				api.CrossPostMessageByName(interactions.LadderFeedChannel, message)
 			}
 			c.JSON(http.StatusOK, gin.H{"type": 4, "data": gin.H{"content": message}})
 			break
