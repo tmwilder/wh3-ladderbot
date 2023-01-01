@@ -139,7 +139,7 @@ func handleCancel(conn *gorm.DB, interaction Interaction) (success bool, channel
 		_, p1User = db.GetUserById(conn, player1UserId)
 		_, p2User = db.GetUserById(conn, player2UserId)
 
-		return true, fmt.Sprintf("%s cancelled the most recent match between %s and %s. Reverted %s to rating %d and %s to rating %d and deleted the match.", user.DiscordUserName, p1User.DiscordUserName, p2User.DiscordUserName, p1User.DiscordUserName, p1User.CurrentRating, p2User.DiscordUserName, p2User.CurrentRating), true
+		return true, fmt.Sprintf("%s cancelled the most recent match between %s and %s. Reverted %s to rating %d and %s to rating %d and marked the match not played.", user.DiscordUserName, p1User.DiscordUserName, p2User.DiscordUserName, p1User.DiscordUserName, p1User.CurrentRating, p2User.DiscordUserName, p2User.CurrentRating), true
 	default:
 		return false, fmt.Sprintf("Unknown prior match state %s contact admins for help.", mostRecentMatch.MatchState), false
 	}
