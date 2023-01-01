@@ -9,9 +9,12 @@ import (
 )
 
 func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
-	queueValue := 300
-	if len(interaction.Data.Options) > 0 {
-		queueValue = interaction.Data.Options[0].Value
+
+	requestedGameMode := db.FromInt(interaction.Data.Options[0].Value)
+
+	ratingRange := 300
+	if len(interaction.Data.Options) > 1 {
+		ratingRange = interaction.Data.Options[0].Value
 	}
 
 	discordUserId := interaction.Member.User.Id
@@ -47,15 +50,15 @@ func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage
 		RequestingUserId:  user.UserId,
 		CreatedAt:         time.Now(),
 		UpdatedAt:         time.Now(),
-		RequestRange:      queueValue, // TODO fix client param tooltip
-		RequestedGameMode: db.All,     // TODO add as client param
+		RequestRange:      ratingRange,
+		RequestedGameMode: requestedGameMode,
 		MatchRequestState: db.MatchRequestStateQueued,
 	}
 	didQueueMatch := db.CreateMatchRequest(conn, newMatchRequest)
 
 	candidatePairings := db.FindCandidatePairings(conn, newMatchRequest)
 	if len(candidatePairings) == 0 {
-		return didQueueMatch, fmt.Sprintf("%s has successfully joined the matchmaking queue with a range of %d elo points and current elo %d.", user.DiscordUserName, queueValue, user.CurrentRating), true
+		return didQueueMatch, fmt.Sprintf("%s has successfully joined the matchmaking queue for mode %s with a range of %d elo points and current elo %d.", user.DiscordUserName, requestedGameMode, ratingRange, user.CurrentRating), true
 	} else {
 		bestPairing := findBestPairing(newMatchRequest, user.CurrentRating, candidatePairings)
 

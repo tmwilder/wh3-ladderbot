@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"discordbot/internal/app/config"
+	"discordbot/internal/db"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -60,12 +61,34 @@ func InstallGlobalCommands(config config.AppConfig) {
 			Name:        Queue,
 			Type:        1,
 			Description: "Enter the matchmaking queue.",
-			Options: []CommandOption{{
-				Name:        "range",
-				Description: "How many elo points up and down you want to match into. Defaults to 300.",
-				Type:        4,
-				Required:    false,
-			}},
+			Options: []CommandOption{
+				{
+					Name:        "mode",
+					Description: "Which game modes would would you like to queue for?",
+					Type:        4,
+					Required:    true,
+					Choices: []CommandOptionChoice{
+						{
+							Name:  "bo1",
+							Value: db.ToInt(db.Bo1),
+						},
+						{
+							Name:  "bo3",
+							Value: db.ToInt(db.Bo3),
+						},
+						{
+							Name:  "all",
+							Value: db.ToInt(db.All),
+						},
+					},
+				},
+				{
+					Name:        "range",
+					Description: "How many elo points up and down you want to match into. Defaults to 300.",
+					Type:        4,
+					Required:    false,
+				},
+			},
 		},
 		{
 			Name:        Dequeue,

@@ -93,7 +93,7 @@ func setMapsHandler(c *gin.Context) {
 		"3. That's it.\n",
 
 		"**How to play:**",
-		"1. Use the command `/queue` in the channel #find-matches. This will queue you up and try to pair you against a player of matching skill when possible. If you want you can define an elo range above and below your rating to restrict matches to with `/queue <elo>`.",
+		"1. Use the command `/queue` in the channel #find-matches. This will queue you up and try to pair you against a player of matching skill when possible. You can queue for only bo1 matches, only bo3 matches, or both if you just want to play. If you want you can define an elo range above and below your rating to restrict matches to with `/queue <elo>`.",
 		"2. Once you are paired contact your opponent and play your match.",
 		"3. When done you or your opponent reports results with `/report win` or `/report loss`. Your ratings and records will be updated and you can immediately queue again after reporting.",
 		"4. If you want to leave the queue before getting matched you can use `/dequeue`. If you want to cancel a match without playing it you can use `/report cancel`. If you or your opponent puts in the wrong match results you can fix this by just reporting again with the right result, which will overwrite your previous entry.\n",
@@ -125,6 +125,10 @@ func setMapsHandler(c *gin.Context) {
 		"Winner of game 2 picks 3 and bans 1 (the player can not ban the same faction that he/she already banned in game 1 or 2)",
 		"Loser of game 2 picks 1 and bans of the winners 3 choices",
 		"Winner of game 2 then picks 1 of remaining two choices\n",
+
+		"**Bo1 Format:**",
+		"Players do a global 3 ban -> blind 1 pick draft using this preset <https://aoe2cm.net/preset/DNEXy> and then play a game on the map assigned by the bot.",
+		"If you cannot or do not want to play the match, report a cancel before the draft - after the draft your opponent should report a win if you do not want to play.\n",
 
 		"**Crashes/Disconnects:**",
 		"If it's clear who would have won, give the game to that player",
