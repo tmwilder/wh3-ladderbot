@@ -151,8 +151,8 @@ func updateLeaderBoardHandler(c *gin.Context) {
 	}
 	conn := db.GetDbConn()
 
-	postMonthlyWinStandings(conn)
-	postEloStandings(conn)
+	PostMonthlyWinStandings(conn)
+	PostEloStandings(conn)
 }
 
 func expireMatchRequestsHandler(c *gin.Context) {
@@ -164,7 +164,7 @@ func expireMatchRequestsHandler(c *gin.Context) {
 	interactions.ExpireMatchRequests(conn)
 }
 
-func postMonthlyWinStandings(conn *gorm.DB) {
+func PostMonthlyWinStandings(conn *gorm.DB) {
 	usersWithStats := db.GetMonthlyWinLeaderboard(conn)
 	leaderBoardLines := []string{"Total wins this month: \n"}
 	for i, v := range usersWithStats {
@@ -174,7 +174,7 @@ func postMonthlyWinStandings(conn *gorm.DB) {
 	api.ReplaceChannelContents(config.GetAppConfig().HomeGuildId, "leaderboard", leaderBoardLines)
 }
 
-func postEloStandings(conn *gorm.DB) {
+func PostEloStandings(conn *gorm.DB) {
 	usersWithStats := db.GetEloLeaderboard(conn)
 	leaderBoardLines := []string{"All time top Elo Ratings: \n"}
 	for i, v := range usersWithStats {
