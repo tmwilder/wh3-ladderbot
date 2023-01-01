@@ -1,4 +1,4 @@
-## WH3 LadderBot
+## WH3 Community LadderBot
 
 This repo contains code to run a Total War Warhammer 3 Matchmaking ladder.
 
@@ -20,6 +20,33 @@ To get local development running:
 10. Install your test app to any discord channel.
 11. POST to localhost:8080/commands?ADMIN_KEY=<pull from step 8> to install this app's commands as global commands to your test bot.
 12. You should now be able to send slash commands from your test channel using your test app to your local dev env.
+
+## Discord Server and Channel Configuration
+
+The bot is designed to operate with one home Discord server with full features and any number of federated guest
+servers.
+
+The main difference is that the home server has more channels like rules and maps and the leaderboard, and guest servers
+only contain the matchmaking queue and a ladder feed so that they can see what is going on across all servers.
+
+To this end - to configure a Home Server we need:
+
+1. A server
+2. The bot is installed on that server and has permissions for send messages, manage messages, manage application commands.
+3. The server has the following - which the bot will post to:
+   1. Status as a community so that we can do an announcement channel.
+   2. #ladder-feed - this can be in a section like WCL and needs to be a channel with this exact name and announcements enabled. Permissions should be locked to just bot posts.
+   3. #find-matches - users of the server can post.
+   4. #leaderboard
+   5. #elo-ratings
+   6. #rules-and-maps
+   7. The bot installed with manage messages, create messages, application.commands permissions.
+
+To configure a guest server:
+1. The bot is installed with application.commands and create messages.
+2. #find-matches for players.
+3. Locked #ladder-feed following the home server ladder feed announcements, although the channel ca be named anything because the bot does not directly interact with it.
+4. Optionally - we can configure the maps, leaderboard, and elo ratings channel as announcement channels and follow them on guests.
 
 Other useful operations:
 `docker compose -down` - Takes down the instances
@@ -50,10 +77,9 @@ public call / ease of sec impl tradeoff.
 ## TODO:
 1. Clean up some of the routing/request handling/error handling ergonomics so that our use of gin is less janky
 2. Make the messaging and dms back to players make sense for our lifecycle
-3. Set up a way to communicate the map pool to a channel - need to use channel replacement code
-4. Set up a way to schedule leaderboard updates either on each match change or periodically
-5. Find first test channel - probably RTK - do a ladder trial
-6. Set up some admin functionality for fixing oops and such
-7. Add event support
-8. Add automated dequeue
-9. Ping the players when they are paired
+3. Set up a way to schedule leaderboard updates either on each match change or periodically
+4. Find first test channel - probably RTK - do a ladder trial
+5. Set up some admin functionality for fixing oops and such
+6. Add event support
+7. Add automated dequeue
+8. Ping the players when they are paired

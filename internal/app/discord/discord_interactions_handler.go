@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"discordbot/internal/app/config"
+	"discordbot/internal/app/discord/api"
 	"discordbot/internal/app/discord/commands"
 	"discordbot/internal/app/discord/interactions"
 	"discordbot/internal/db"
@@ -46,7 +47,13 @@ func InteractionsHandler(c *gin.Context) {
 			c.JSON(http.StatusOK, PingResponse{Type: 1})
 			break
 		case 2:
-			message := handleInteractionCommand(interaction)
+			message, shouldCrossPost := handleInteractionCommand(interaction)
+			if shouldCrossPost {
+				// Only announce things that are worth announcing.
+				// Generally this means elo changes and queue changes do report and error states and operation
+				// failures don't get reported.
+				api.CrossPostMessageByName("ladder-feed", message)
+			}
 			c.JSON(http.StatusOK, gin.H{"type": 4, "data": gin.H{"content": message}})
 			break
 		default:
@@ -80,22 +87,22 @@ func parseInteraction(requestBodyData []byte) (interaction interactions.Interact
 	return interaction
 }
 
-func handleInteractionCommand(interaction interactions.Interaction) (channelMessage string) {
+func handleInteractionCommand(interaction interactions.Interaction) (channelMessage string, shouldCrossPost bool) {
 	// Authn - gets the user id
 	// Do authz - checks that the userID can do the thing being attempted - bail w/4xx if not.
 	conn := db.GetDbConn()
 
 	switch interaction.Data.Name {
 	case commands.Queue:
-		_, channelMessage = interactions.Queue(conn, interaction)
+		_, channelMessage, shouldCrossPost = interactions.Queue(conn, interaction)
 		break
 	case commands.Dequeue:
-		_, channelMessage = interactions.Dequeue(conn, interaction)
+		_, channelMessage, shouldCrossPost = interactions.Dequeue(conn, interaction)
 		break
 	case commands.Report:
-		_, channelMessage = interactions.Report(conn, interaction)
+		_, channelMessage, shouldCrossPost = interactions.Report(conn, interaction)
 	default:
 		panic("Unknown interaction: " + interaction.Data.Name)
 	}
-	return channelMessage
+	return channelMessage, shouldCrossPost
 }

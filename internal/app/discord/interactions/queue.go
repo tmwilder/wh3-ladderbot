@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage string) {
+func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
 	queueValue := 300
 	if len(interaction.Data.Options) > 0 {
 		queueValue = interaction.Data.Options[0].Value
@@ -34,12 +34,12 @@ func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage
 
 	foundEntry, _ := db.GetMatchRequest(conn, user.UserId)
 	if foundEntry {
-		return false, "Found existing queued match request - if you want to change your elo range dequeue and requeue at the new range, otherwise stand by and you will be paired when a matching player joins!"
+		return false, "Found existing queued match request - if you want to change your elo range dequeue and requeue at the new range, otherwise stand by and you will be paired when a matching player joins!", false
 	}
 
 	foundActiveMatch, _ := db.GetCurrentMatch(conn, user.UserId)
 	if foundActiveMatch {
-		return false, "You appear to have a still open match - please report results for that before queuing again."
+		return false, "You appear to have a still open match - please report results for that before queuing again.", false
 	}
 
 	// Now with assurances of a registered user and no existing entry - try to queue their entry
@@ -55,7 +55,7 @@ func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage
 
 	candidatePairings := db.FindCandidatePairings(conn, newMatchRequest)
 	if len(candidatePairings) == 0 {
-		return didQueueMatch, fmt.Sprintf("You have successfully joined the matchmaking queue with a range of %d elo points.", queueValue)
+		return didQueueMatch, fmt.Sprintf("%s has successfully joined the matchmaking queue with a range of %d elo points and current elo %d.", user.DiscordUserName, queueValue, user.CurrentRating), true
 	} else {
 		bestPairing := findBestPairing(newMatchRequest, user.CurrentRating, candidatePairings)
 
@@ -69,12 +69,12 @@ func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage
 
 		mapStr := "[" + strings.Join(maps, ", ") + "]"
 
-		// TODO better msg here
 		return true, fmt.Sprintf(
-			`%s joined the queue and was paired against %s. Please play a %s match and report the results when done. Your randomly assigned map order will be: %s.`,
-			user.DiscordUserName,
-			opponent.DiscordUserName,
-			bestPairing.RequestedGameMode,
-			mapStr)
+				`%s (P1) joined the queue and was paired against %s (P2). Please play a %s match and report the results when done. Your randomly assigned map order will be: %s.`,
+				user.DiscordUserName,
+				opponent.DiscordUserName,
+				bestPairing.RequestedGameMode,
+				mapStr),
+			true
 	}
 }

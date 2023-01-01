@@ -141,7 +141,7 @@ func postContentInChannel(channelId string, contentLines []string) (success bool
 	return true
 }
 
-func postOneMessage(channelId string, content string) (success bool) {
+func postOneMessage(channelId string, content string) (success bool, response Message) {
 	incrementalUrl := fmt.Sprintf("channels/%s/messages", channelId)
 	postBody := map[string]string{"content": content}
 	body, err := json.Marshal(postBody)
@@ -151,6 +151,33 @@ func postOneMessage(channelId string, content string) (success bool) {
 	statusCode, body := callDiscord(incrementalUrl, http.MethodPost, body)
 	if statusCode != http.StatusOK {
 		panic(fmt.Sprintf("Unable to post message - got non-204 code: %d w/msg: %s", statusCode, string(body)))
+	}
+
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		log.Panicf("Unable to read message response for message posted to %s", channelId)
+	}
+
+	return true, response
+}
+
+func CrossPostMessageByName(channelName string, message string) (success bool) {
+	foundChannel, channel := findChannel(channelName, config.GetAppConfig().HomeGuildId)
+	if !foundChannel {
+		log.Panicf("Unable to find channel: %s", channelName)
+		return false
+	}
+	posted, createdMessage := postOneMessage(channel.ChannelId, message)
+	if !posted {
+		log.Panicf("Unable to post message to channel: %s", channelName)
+	}
+
+	incrementalUrl := fmt.Sprintf("channels/%s/messages/%s/crosspost", channel.ChannelId, createdMessage.MessageId)
+
+	status, crossPostRes := callDiscord(incrementalUrl, http.MethodPost, []byte{})
+
+	if status != http.StatusOK {
+		log.Panicf("Unable to cross post message: %s", crossPostRes)
 	}
 	return true
 }
