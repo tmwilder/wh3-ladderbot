@@ -9,12 +9,15 @@ import (
 )
 
 func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
-
-	requestedGameMode := db.FromInt(interaction.Data.Options[0].Value)
-
+	requestedGameMode := db.Bo1
 	ratingRange := 300
-	if len(interaction.Data.Options) > 1 {
-		ratingRange = interaction.Data.Options[0].Value
+
+	for _, v := range interaction.Data.Options {
+		if v.Name == "range" {
+			ratingRange = v.Value
+		} else if v.Name == "mode" {
+			requestedGameMode = db.FromInt(v.Value)
+		}
 	}
 
 	discordUserId := interaction.Member.User.Id
