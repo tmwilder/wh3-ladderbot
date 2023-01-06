@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"discordbot/internal/app/config"
-	"discordbot/internal/app/discord/api"
 	"discordbot/internal/app/discord/commands"
 	"discordbot/internal/app/discord/interactions"
 	"discordbot/internal/db"
@@ -52,7 +51,8 @@ func InteractionsHandler(c *gin.Context) {
 				// Only announce things that are worth announcing.
 				// Generally this means elo changes and queue changes do report and error states and operation
 				// failures don't get reported.
-				api.CrossPostMessageByName(interactions.LadderFeedChannel, message)
+				// TODO - enable when discord responds about the rate limits.
+				//api.CrossPostMessageByName(interactions.LadderFeedChannel, message)
 			}
 			c.JSON(http.StatusOK, gin.H{"type": 4, "data": gin.H{"content": message}})
 			break

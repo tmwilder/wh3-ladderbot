@@ -1,7 +1,6 @@
 package interactions
 
 import (
-	"discordbot/internal/app/discord/api"
 	"discordbot/internal/db"
 	"fmt"
 	"gorm.io/gorm"
@@ -81,9 +80,10 @@ func ExpireMatchRequests(conn *gorm.DB) (success bool) {
 		}
 		collatedMessages = append(collatedMessages, collatedMessage)
 
-		for _, v := range collatedMessages {
-			api.CrossPostMessageByName(LadderFeedChannel, v)
-		}
+		// TODO - enable when discord responds about the rate limits.
+		//for _, v := range collatedMessages {
+		//	api.CrossPostMessageByName(LadderFeedChannel, v)
+		//}
 	}
 	return true
 }
