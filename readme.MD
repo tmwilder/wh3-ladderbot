@@ -83,3 +83,4 @@ public call / ease of sec impl tradeoff.
 6. Add event support
 7. Add automated dequeue
 8. Ping the players when they are paired
+9. Add help command

@@ -167,18 +167,19 @@ func CrossPostMessageByName(channelName string, message string) (success bool) {
 		log.Panicf("Unable to find channel: %s", channelName)
 		return false
 	}
-	posted, createdMessage := postOneMessage(channel.ChannelId, message)
+	posted, _ := postOneMessage(channel.ChannelId, message)
 	if !posted {
 		log.Panicf("Unable to post message to channel: %s", channelName)
 	}
 
-	incrementalUrl := fmt.Sprintf("channels/%s/messages/%s/crosspost", channel.ChannelId, createdMessage.MessageId)
-
-	status, crossPostRes := callDiscord(incrementalUrl, http.MethodPost, []byte{})
-
-	if status != http.StatusOK {
-		log.Panicf("Unable to cross post message: %s", crossPostRes)
-	}
+	// TODO - enable when discord responds about the rate limits.
+	//incrementalUrl := fmt.Sprintf("channels/%s/messages/%s/crosspost", channel.ChannelId, createdMessage.MessageId)
+	//
+	//status, crossPostRes := callDiscord(incrementalUrl, http.MethodPost, []byte{})
+	//
+	//if status != http.StatusOK {
+	//	log.Panicf("Unable to cross post message: %s", crossPostRes)
+	//}
 	return true
 }
 

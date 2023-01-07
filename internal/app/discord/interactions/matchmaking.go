@@ -1,6 +1,7 @@
 package interactions
 
 import (
+	"discordbot/internal/app/discord/api"
 	"discordbot/internal/db"
 	"fmt"
 	"gorm.io/gorm"
@@ -63,7 +64,7 @@ func ExpireMatchRequests(conn *gorm.DB) (success bool) {
 		success := db.CancelMatchRequest(conn, v.RequestingUserId)
 		if success {
 			_, user := db.GetUserById(conn, v.RequestingUserId)
-			messages = append(messages, fmt.Sprintf("Dequeued match request for user %s because it was 45m stale. Please requeue if you'd like to keep playing!\n", user.DiscordUserName))
+			messages = append(messages, fmt.Sprintf("Dequeued match request for user <@!%s> because it was 45m stale. Please requeue if you'd like to keep playing!\n", user.DiscordId))
 		}
 	}
 	if len(messages) > 0 {
@@ -80,10 +81,9 @@ func ExpireMatchRequests(conn *gorm.DB) (success bool) {
 		}
 		collatedMessages = append(collatedMessages, collatedMessage)
 
-		// TODO - enable when discord responds about the rate limits.
-		//for _, v := range collatedMessages {
-		//	api.CrossPostMessageByName(LadderFeedChannel, v)
-		//}
+		for _, v := range collatedMessages {
+			api.CrossPostMessageByName(LadderFeedChannel, v)
+		}
 	}
 	return true
 }

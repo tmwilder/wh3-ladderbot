@@ -76,9 +76,9 @@ func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage
 		mapStr := "[" + strings.Join(maps, ", ") + "]"
 
 		return true, fmt.Sprintf(
-				`%s (P1) joined the queue and was paired against %s (P2). Please play a %s match and report the results when done. Your randomly assigned map order will be: %s.`,
-				user.DiscordUserName,
-				opponent.DiscordUserName,
+				`<@!%s> (P1) joined the queue and was paired against <@!%s> (P2). Please play a %s match and report the results when done. Your randomly assigned map order is: %s.`,
+				user.DiscordId,
+				opponent.DiscordId,
 				bestPairing.RequestedGameMode,
 				mapStr),
 			true
