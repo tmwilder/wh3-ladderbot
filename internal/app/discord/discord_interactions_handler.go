@@ -79,7 +79,7 @@ func verifyRequest(c *gin.Context, requestBodyData []byte, key ed25519.PublicKey
 	return ed25519.Verify(key, toVerify.Bytes(), byteSig)
 }
 
-func parseInteraction(requestBodyData []byte) (interaction interactions.Interaction) {
+func parseInteraction(requestBodyData []byte) (interaction api.Interaction) {
 	err := json.Unmarshal(requestBodyData, &interaction)
 	if err != nil {
 		panic(err)
@@ -87,7 +87,7 @@ func parseInteraction(requestBodyData []byte) (interaction interactions.Interact
 	return interaction
 }
 
-func handleInteractionCommand(interaction interactions.Interaction) (channelMessage string, shouldCrossPost bool) {
+func handleInteractionCommand(interaction api.Interaction) (channelMessage string, shouldCrossPost bool) {
 	// Authn - gets the user id
 	// Do authz - checks that the userID can do the thing being attempted - bail w/4xx if not.
 	conn := db.GetDbConn()

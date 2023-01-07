@@ -1,6 +1,7 @@
 package interactions
 
 import (
+	"discordbot/internal/app/discord/api"
 	"discordbot/internal/db"
 	"fmt"
 	"gorm.io/gorm"
@@ -8,7 +9,7 @@ import (
 	"time"
 )
 
-func Queue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
+func Queue(conn *gorm.DB, interaction api.Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
 	requestedGameMode := db.Bo1
 	ratingRange := 300
 

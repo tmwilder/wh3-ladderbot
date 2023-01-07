@@ -1,6 +1,7 @@
 package interactions
 
 import (
+	"discordbot/internal/app/discord/api"
 	"discordbot/internal/app/discord/commands"
 	"discordbot/internal/app/ratings"
 	"discordbot/internal/db"
@@ -8,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Report(conn *gorm.DB, interaction Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
+func Report(conn *gorm.DB, interaction api.Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
 	outcome := commands.ReportOutcome(interaction.Data.Options[0].Value)
 
 	switch outcome {
@@ -23,7 +24,7 @@ func Report(conn *gorm.DB, interaction Interaction) (success bool, channelMessag
 	}
 }
 
-func handlePlayedMatch(conn *gorm.DB, interaction Interaction, isWin bool) (success bool, channelMessage string, shouldCrossPost bool) {
+func handlePlayedMatch(conn *gorm.DB, interaction api.Interaction, isWin bool) (success bool, channelMessage string, shouldCrossPost bool) {
 	foundUser, user := db.GetUserByDiscordId(conn, interaction.Member.User.Id)
 
 	if !foundUser {
@@ -101,7 +102,7 @@ func recordMatchWinner(conn *gorm.DB, p1User db.User, p2User db.User, mostRecent
 		true
 }
 
-func handleCancel(conn *gorm.DB, interaction Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
+func handleCancel(conn *gorm.DB, interaction api.Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
 	foundUser, user := db.GetUserByDiscordId(conn, interaction.Member.User.Id)
 
 	if !foundUser {

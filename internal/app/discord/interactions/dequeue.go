@@ -1,12 +1,13 @@
 package interactions
 
 import (
+	"discordbot/internal/app/discord/api"
 	"discordbot/internal/db"
 	"fmt"
 	"gorm.io/gorm"
 )
 
-func Dequeue(conn *gorm.DB, interaction Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
+func Dequeue(conn *gorm.DB, interaction api.Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
 	discordUserId := interaction.Member.User.Id
 
 	foundUser, user := db.GetUserByDiscordId(conn, discordUserId)

@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
 
 type Channel struct {
@@ -18,11 +19,42 @@ type Channel struct {
 }
 
 type Message struct {
-	MessageId string `json:"id"`
+	MessageId string      `json:"id"`
+	User      DiscordUser `json:"author"`
 }
 
 type MessageToPost struct {
 	Content string `json:"content"`
+}
+
+type DiscordUser struct {
+	Id       string `json:"id"`
+	Username string `json:"username"`
+	IsBot    bool   `json:"bot"`
+}
+
+type DiscordMemberInfo struct {
+	User DiscordUser `json:"user"`
+}
+
+type OptionData struct {
+	Type  int    `json:"type"`
+	Name  string `json:"name"`
+	Value int    `json:"value"`
+}
+
+type InteractionData struct {
+	Options []OptionData         `json:"options"`
+	Type    int                  `json:"type"`
+	Name    commands.CommandName `json:"name"`
+	Id      string               `json:"id"`
+}
+
+type Interaction struct {
+	Type   int               `json:"type"`
+	Token  string            `json:"token"`
+	Member DiscordMemberInfo `json:"member"`
+	Data   InteractionData   `json:"data"`
 }
 
 const maxMessageCharsLength = 1800
@@ -35,20 +67,34 @@ func ReplaceChannelContents(guildId string, channelName string, contentLines []s
 	}
 
 	// Get all posts in the channel
-	messages := GetMessages(channel.ChannelId)
+	existingMessages := GetMessages(channel.ChannelId)
+	posts := postFormatLines(contentLines)
 
-	// Delete all posts in the channel
-	if (len(messages)) > 0 {
-		if len(messages) == 1 {
-			// Evidently the discord bulk delete cannot handle exactly one msg and you must call the per-message API.
-			deleteOneMessage(channel.ChannelId, messages[0].MessageId)
-		} else {
-			deleteOurMessagesInChannel(channel.ChannelId, messages)
+	// Delete messages anyone else has posted.
+	var deletedIndexes []int
+	for i, v := range existingMessages {
+		if v.User.IsBot == false {
+			deleteOneMessage(channel.ChannelId, existingMessages[i].MessageId)
 		}
 	}
+	for _, i := range deletedIndexes {
+		existingMessages = append(existingMessages[:i], existingMessages[i+1:]...)
+	}
 
-	// Chunk up contents into N posts of max post length and post them
-	postContentInChannel(channel.ChannelId, contentLines)
+	if len(existingMessages) > len(posts) {
+		// If there's too many posts in the channel delete all posts and then post.
+		if len(existingMessages) == 1 {
+			// Evidently the discord bulk delete cannot handle exactly one msg and you must call the per-message API.
+			deleteOneMessage(channel.ChannelId, existingMessages[0].MessageId)
+		} else {
+			deleteOurMessagesInChannel(channel.ChannelId, existingMessages)
+		}
+		postContentInChannel(channel.ChannelId, []Message{}, posts)
+	} else {
+		// Otherwise edit the existing messages to post and add new ones as needed.
+		postContentInChannel(channel.ChannelId, existingMessages, posts)
+	}
+
 }
 
 func findChannel(channelName string, guildId string) (foundChannel bool, channel Channel) {
@@ -90,7 +136,11 @@ func GetMessages(channelId string) (messages []Message) {
 	if err != nil {
 		log.Panicf("Unable to parse channel data: %v", err)
 	}
-	return messages
+	var output []Message
+	for i := len(messages) - 1; i >= 0; i-- {
+		output = append(output, messages[i])
+	}
+	return output
 }
 
 func deleteOurMessagesInChannel(channelId string, messages []Message) (success bool) {
@@ -110,10 +160,10 @@ func deleteOurMessagesInChannel(channelId string, messages []Message) (success b
 	if err != nil {
 		panic(err)
 	}
-	statusCode, _ := callDiscord(incrementalUrl, http.MethodPost, body)
+	statusCode, body := callDiscord(incrementalUrl, http.MethodPost, body)
 
 	if statusCode != http.StatusNoContent {
-		panic(fmt.Sprintf("Unable to delete messages - got non-204 code: %d", statusCode))
+		panic(fmt.Sprintf("Unable to delete messages - got non-204 code: %d with response body: %s", statusCode, body))
 	}
 	return true
 }
@@ -127,18 +177,30 @@ func deleteOneMessage(channelId string, messageId string) (success bool) {
 	return true
 }
 
-func postContentInChannel(channelId string, contentLines []string) (success bool) {
+func postContentInChannel(channelId string, existingMessages []Message, posts []string) (success bool) {
+	for i, post := range posts {
+		if i <= len(existingMessages)-1 {
+			editOneMessage(channelId, existingMessages[i], post)
+		} else {
+			postOneMessage(channelId, post)
+		}
+		time.Sleep(4 * time.Second)
+	}
+	return true
+}
+
+func postFormatLines(contentLines []string) (posts []string) {
 	content := ""
 	for _, v := range contentLines {
 		if len(content) >= maxMessageCharsLength {
-			postOneMessage(channelId, content)
+			posts = append(posts, content)
 			content = ""
 		} else {
 			content += fmt.Sprintf("%s\n", v)
 		}
 	}
-	postOneMessage(channelId, content)
-	return true
+	posts = append(posts, content)
+	return posts
 }
 
 func postOneMessage(channelId string, content string) (success bool, response Message) {
@@ -151,6 +213,26 @@ func postOneMessage(channelId string, content string) (success bool, response Me
 	statusCode, body := callDiscord(incrementalUrl, http.MethodPost, body)
 	if statusCode != http.StatusOK {
 		panic(fmt.Sprintf("Unable to post message - got non-204 code: %d w/msg: %s", statusCode, string(body)))
+	}
+
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		log.Panicf("Unable to read message response for message posted to %s", channelId)
+	}
+
+	return true, response
+}
+
+func editOneMessage(channelId string, message Message, newContent string) (success bool, response Message) {
+	incrementalUrl := fmt.Sprintf("channels/%s/messages/%s", channelId, message.MessageId)
+	postBody := map[string]string{"content": newContent}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		panic(err)
+	}
+	statusCode, body := callDiscord(incrementalUrl, http.MethodPatch, body)
+	if statusCode != http.StatusOK {
+		panic(fmt.Sprintf("Unable to update message - for message %s got non-200 code: %d w/msg: %s", message.MessageId, statusCode, string(body)))
 	}
 
 	err = json.Unmarshal(body, &response)
