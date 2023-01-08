@@ -16,6 +16,7 @@ func Dequeue(conn *gorm.DB, interaction api.Interaction) (success bool, channelM
 		return false, "Unable to find your account in our system. You must queue at least once to register before you can dequeue. If this is a mistake contact the admins to iron it out and we'll help!", false
 	}
 
+	api.RemoveRoleFromGuildMember(LadderQueueRoleName, discordUserId)
 	foundMatchRequest, _ := db.GetMatchRequest(conn, user.UserId)
 	if !foundMatchRequest {
 		return false, "You are not currently queued - nothing to do!", false
