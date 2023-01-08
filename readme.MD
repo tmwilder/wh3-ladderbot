@@ -76,11 +76,8 @@ public call / ease of sec impl tradeoff.
 
 ## TODO:
 1. Clean up some of the routing/request handling/error handling ergonomics so that our use of gin is less janky
-2. Make the messaging and dms back to players make sense for our lifecycle
-3. Set up a way to schedule leaderboard updates either on each match change or periodically
-4. Find first test channel - probably RTK - do a ladder trial
-5. Set up some admin functionality for fixing oops and such
-6. Add event support
-7. Add automated dequeue
-8. Ping the players when they are paired
-9. Add help command
+2. Set up a way to schedule leaderboard updates either on each match change or periodically
+3. Set up some admin functionality for fixing oops and such
+4. Add event support
+5. Add help command
+6. Add command shortcut aliases like /q /dq /r
