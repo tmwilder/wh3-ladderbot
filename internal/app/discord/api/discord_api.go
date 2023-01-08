@@ -184,7 +184,7 @@ func postContentInChannel(channelId string, existingMessages []Message, posts []
 		} else {
 			postOneMessage(channelId, post)
 		}
-		time.Sleep(4 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 	return true
 }
