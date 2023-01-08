@@ -84,6 +84,15 @@ func parseInteraction(requestBodyData []byte) (interaction api.Interaction) {
 	if err != nil {
 		panic(err)
 	}
+
+	if interaction.Member.User.Id == "" {
+		var alternateDMUser api.ObnoxiousDiscordAlternateDMUserData
+		err := json.Unmarshal(requestBodyData, &alternateDMUser)
+		if err != nil {
+			panic(err)
+		}
+		interaction.Member.User = alternateDMUser.User
+	}
 	return interaction
 }
 

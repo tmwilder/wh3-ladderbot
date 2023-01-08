@@ -38,6 +38,14 @@ type DiscordMemberInfo struct {
 	User DiscordUser `json:"user"`
 }
 
+/*
+	Discord has an undocumented behavior where slash commands sent from DMs have a different structure.
+	This parses that.
+*/
+type ObnoxiousDiscordAlternateDMUserData struct {
+	User DiscordUser `json:"user"`
+}
+
 type OptionData struct {
 	Type  int    `json:"type"`
 	Name  string `json:"name"`
@@ -330,7 +338,8 @@ func AddRoleToGuildMember(roleName string, userId string) (success bool) {
 	statusCode, _ := callDiscord(incrementalUrl, http.MethodPut, []byte{})
 
 	if statusCode != http.StatusNoContent {
-		panic(fmt.Sprintf("Unable to add role to member of the guild - got non-200 code: %d", statusCode))
+		log.Printf(fmt.Sprintf("Unable to add role to member of the guild - got non-200 code: %d", statusCode))
+		return false
 	}
 
 	return true
