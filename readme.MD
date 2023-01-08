@@ -33,17 +33,16 @@ only contain the matchmaking queue and a ladder feed so that they can see what i
 To this end - to configure a Home Server we need:
 
 1. A server
-2. The bot is installed on that server and has permissions for send messages, manage messages, manage application commands.
-3. The server has the following - which the bot will post to:
+2. The bot is installed on that server with permissions send messages, manage messages, application.commands, manager roles.
+3. The server has the following server configuration set up:
    1. Status as a community so that we can do an announcement channel.
    2. #ladder-feed - this can be in a section like WCL and needs to be a channel with this exact name and announcements enabled. Permissions should be locked to just bot posts.
    3. #find-matches - users of the server can post.
    4. #leaderboard
    5. #elo-ratings
    6. #rules-and-maps
-   7. The bot installed with manage messages, create messages, application.commands, manage roles permissions.
-   8. A role called laddering exists on the service and has a nice color assigned like green.
-   9. The bot is scoped via channel perms to only the above channels and roles to minimize attack surface.
+   7. A role called laddering exists on the service and has a nice color assigned like green.
+4. The bot is scoped via channel perms to only the above channels and roles to minimize attack surface.
 
 To configure a guest server:
 1. The bot is installed with application.commands and create messages.
