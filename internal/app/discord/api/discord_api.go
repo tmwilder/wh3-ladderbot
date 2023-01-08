@@ -58,6 +58,11 @@ type Interaction struct {
 	Data   InteractionData   `json:"data"`
 }
 
+type Role struct {
+	RoleId   string `json:"id"`
+	RoleName string `json:"name"`
+}
+
 const maxMessageCharsLength = 1800
 
 func ReplaceChannelContents(guildId string, channelName string, contentLines []string) {
@@ -281,6 +286,65 @@ func CrossPostMessageByName(channelName string, message string) (success bool) {
 	//if status != http.StatusOK {
 	//	log.Panicf("Unable to cross post message: %s", crossPostRes)
 	//}
+	return true
+}
+
+func GetRoles(guildId string) (roles []Role) {
+	incrementalUrl := fmt.Sprintf("/guilds/%s/roles", guildId)
+	statusCode, body := callDiscord(incrementalUrl, http.MethodGet, []byte{})
+
+	if statusCode != http.StatusOK {
+		panic(fmt.Sprintf("Unable to get roles from guild - got non-200 code: %d", statusCode))
+	}
+
+	err := json.Unmarshal(body, &roles)
+
+	if err != nil {
+		log.Panicf("Unable to parse role data: %v", err)
+	}
+
+	return roles
+}
+
+func findRole(roleName string, guildId string) (foundRole bool, channel Role) {
+	roles := GetRoles(guildId)
+	for _, v := range roles {
+		if v.RoleName == roleName {
+			return true, v
+		}
+	}
+	return false, Role{}
+}
+
+func AddRoleToGuildMember(roleName string, userId string) (success bool) {
+	appConfig := config.GetAppConfig()
+	foundRole, role := findRole(roleName, appConfig.HomeGuildId)
+
+	if !foundRole {
+		panic(fmt.Sprintf("Unable to find role with name: %s", roleName))
+	}
+
+	incrementalUrl := fmt.Sprintf("/guilds/%s/members/%s/roles/%s", appConfig.HomeGuildId, userId, role.RoleId)
+	statusCode, _ := callDiscord(incrementalUrl, http.MethodPut, []byte{})
+
+	if statusCode != http.StatusNoContent {
+		panic(fmt.Sprintf("Unable to add role to member of the guild - got non-200 code: %d", statusCode))
+	}
+
+	return true
+}
+
+func RemoveRoleFromGuildMember(roleName string, userId string) (success bool) {
+	appConfig := config.GetAppConfig()
+	_, role := findRole(roleName, appConfig.HomeGuildId)
+
+	incrementalUrl := fmt.Sprintf("/guilds/%s/members/%s/roles/%s", appConfig.HomeGuildId, userId, role.RoleId)
+	statusCode, _ := callDiscord(incrementalUrl, http.MethodDelete, []byte{})
+
+	if statusCode != http.StatusNoContent {
+		panic(fmt.Sprintf("Unable to add role to member of the guild - got non-200 code: %d", statusCode))
+	}
+
 	return true
 }
 

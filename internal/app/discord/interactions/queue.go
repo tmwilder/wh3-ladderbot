@@ -39,6 +39,7 @@ func Queue(conn *gorm.DB, interaction api.Interaction) (success bool, channelMes
 		_, user = db.GetUserByDiscordId(conn, discordUserId)
 	}
 
+	api.AddRoleToGuildMember(LadderQueueRoleName, interaction.Member.User.Id)
 	foundEntry, _ := db.GetMatchRequest(conn, user.UserId)
 	if foundEntry {
 		return false, "Found existing queued match request - if you want to change your elo range dequeue and requeue at the new range, otherwise stand by and you will be paired when a matching player joins!", false

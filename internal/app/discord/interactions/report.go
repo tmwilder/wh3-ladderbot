@@ -55,6 +55,9 @@ func handlePlayedMatch(conn *gorm.DB, interaction api.Interaction, isWin bool) (
 
 	switch mostRecentMatch.MatchState {
 	case db.Matched:
+		// Matched state will be hit once - no state leak
+		api.RemoveRoleFromGuildMember(LadderQueueRoleName, p1User.DiscordId)
+		api.RemoveRoleFromGuildMember(LadderQueueRoleName, p2User.DiscordId)
 		// Get current ratings, compute new ratings, update ratings for both players, then update match state to complete.
 		return recordMatchWinner(conn, p1User, p2User, mostRecentMatch, p1Won)
 	case db.Completed:
