@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"discordbot/internal/app/config"
 	"discordbot/internal/app/discord/commands"
+	"discordbot/internal/db"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -182,7 +183,7 @@ func postContentInChannel(channelId string, existingMessages []Message, posts []
 		if i <= len(existingMessages)-1 {
 			editOneMessage(channelId, existingMessages[i], post)
 		} else {
-			postOneMessage(channelId, post)
+			PostOneMessage(channelId, post)
 		}
 		time.Sleep(5 * time.Second)
 	}
@@ -203,7 +204,25 @@ func postFormatLines(contentLines []string) (posts []string) {
 	return posts
 }
 
-func postOneMessage(channelId string, content string) (success bool, response Message) {
+func UpsertDmChannel(recipient db.User) (createdChannel bool, response Channel) {
+	incrementalUrl := fmt.Sprintf("/users/@me/channels")
+	postBody := map[string]string{"recipient_id": recipient.DiscordId}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		panic(err)
+	}
+	statusCode, body := callDiscord(incrementalUrl, http.MethodPost, body)
+	if statusCode != http.StatusOK {
+		panic(fmt.Sprintf("Unable to create DM channel - got non-200 code: %d w/msg: %s", statusCode, string(body)))
+	}
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		log.Panicf("Unable to read message response for DM channel creation with user %s", recipient.UserId)
+	}
+	return true, response
+}
+
+func PostOneMessage(channelId string, content string) (success bool, response Message) {
 	incrementalUrl := fmt.Sprintf("channels/%s/messages", channelId)
 	postBody := map[string]string{"content": content}
 	body, err := json.Marshal(postBody)
@@ -249,7 +268,7 @@ func CrossPostMessageByName(channelName string, message string) (success bool) {
 		log.Panicf("Unable to find channel: %s", channelName)
 		return false
 	}
-	posted, _ := postOneMessage(channel.ChannelId, message)
+	posted, _ := PostOneMessage(channel.ChannelId, message)
 	if !posted {
 		log.Panicf("Unable to post message to channel: %s", channelName)
 	}
