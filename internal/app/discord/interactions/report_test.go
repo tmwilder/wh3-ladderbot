@@ -1,6 +1,7 @@
 package interactions
 
 import (
+	"discordbot/internal/app/discord/api"
 	"discordbot/internal/app/discord/commands"
 	"discordbot/internal/db"
 	"fmt"
@@ -60,11 +61,11 @@ func TestReportWin(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	user1, user2, match := setUpTestMatch(conn)
 
-	Report(conn, Interaction{
-		Member: DiscordMemberInfo{DiscordUser{Id: user1.DiscordId, Username: user1.DiscordUserName}},
-		Data: InteractionData{
+	Report(conn, api.Interaction{
+		Member: api.DiscordMemberInfo{api.DiscordUser{Id: user1.DiscordId, Username: user1.DiscordUserName}},
+		Data: api.InteractionData{
 			Name: commands.Report,
-			Options: []OptionData{
+			Options: []api.OptionData{
 				{
 					Type:  3,
 					Name:  "Win",
@@ -89,11 +90,11 @@ func TestReportLoss(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	user1, user2, match := setUpTestMatch(conn)
 
-	Report(conn, Interaction{
-		Member: DiscordMemberInfo{DiscordUser{Id: user1.DiscordId, Username: user1.DiscordUserName}},
-		Data: InteractionData{
+	Report(conn, api.Interaction{
+		Member: api.DiscordMemberInfo{api.DiscordUser{Id: user1.DiscordId, Username: user1.DiscordUserName}},
+		Data: api.InteractionData{
 			Name: commands.Report,
-			Options: []OptionData{
+			Options: []api.OptionData{
 				{
 					Type:  3,
 					Name:  "Win",
@@ -118,11 +119,11 @@ func TestReportCancel(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	user1, user2, match := setUpTestMatch(conn)
 
-	Report(conn, Interaction{
-		Member: DiscordMemberInfo{DiscordUser{Id: user1.DiscordId, Username: user1.DiscordUserName}},
-		Data: InteractionData{
+	Report(conn, api.Interaction{
+		Member: api.DiscordMemberInfo{api.DiscordUser{Id: user1.DiscordId, Username: user1.DiscordUserName}},
+		Data: api.InteractionData{
 			Name: commands.Report,
-			Options: []OptionData{
+			Options: []api.OptionData{
 				{
 					Type:  3,
 					Name:  "Win",
@@ -147,11 +148,11 @@ func TestReportCircularClusterOfNonsense(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	user1, user2, match := setUpTestMatch(conn)
 
-	interaction := Interaction{
-		Member: DiscordMemberInfo{DiscordUser{Id: user1.DiscordId, Username: user1.DiscordUserName}},
-		Data: InteractionData{
+	interaction := api.Interaction{
+		Member: api.DiscordMemberInfo{api.DiscordUser{Id: user1.DiscordId, Username: user1.DiscordUserName}},
+		Data: api.InteractionData{
 			Name: commands.Report,
-			Options: []OptionData{
+			Options: []api.OptionData{
 				{
 					Type:  3,
 					Name:  "Win",

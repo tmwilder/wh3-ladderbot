@@ -70,13 +70,10 @@ func GetEloLeaderboard(conn *gorm.DB) (result []UserWithStats) {
 			u.discord_username,
 			u.discord_id,
 			u.current_rating,
-			SUM(case when m1.winner ='p1' then 1 else 0 end) + SUM(case when m2.winner ='p2' then 1 else 0 end) as total_wins,
-			SUM(case when m2.winner ='p1' then 1 else 0 end) + SUM(case when m1.winner ='p2' then 1 else 0 end) as total_losses
+			SUM(IF(m1.winner = 'p1' AND m1.p1_user_id = u.id, 1, 0)) + SUM(IF(m1.winner = 'p2' AND p2_user_id = u.id, 1, 0)) as total_wins,
+			SUM(IF(m1.winner = 'p1' AND m1.p2_user_id = u.id, 1, 0)) + SUM(IF(m1.winner = 'p2' AND m1.p1_user_id = u.id, 1, 0)) as total_losses
 		FROM users u
-		LEFT JOIN matches m1 ON
-			(u.id = m1.p1_user_id AND m1.match_state = 'completed')
-		LEFT JOIN matches m2 ON
-			(u.id = m2.p2_user_id AND m2.match_state = 'completed')
+		LEFT JOIN matches m1 ON (u.id = m1.p1_user_id OR u.id = m1.p2_user_id) AND m1.match_state = 'completed' 
 		GROUP BY u.id
 		ORDER BY current_rating DESC
 	`).Rows()
@@ -118,21 +115,19 @@ func GetMonthlyWinLeaderboard(conn *gorm.DB) (result []UserWithStats) {
 	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
 
 	rows, err := conn.Raw(`
-		SELECT 
-			u.id,
-			u.discord_username,
-			u.discord_id,
-			u.current_rating,
-			SUM(case when m1.winner ='p1' then 1 else 0 end) + SUM(case when m2.winner ='p2' then 1 else 0 end) as total_wins_this_month,
-			SUM(case when m2.winner ='p1' then 1 else 0 end) + SUM(case when m1.winner ='p2' then 1 else 0 end) as total_losses_this_month
-		FROM users u
-		LEFT JOIN matches m1 ON
-			(u.id = m1.p1_user_id AND m1.match_state = 'completed' AND m1.created_at >= ?)
-		LEFT JOIN matches m2 ON
-			(u.id = m2.p2_user_id AND m2.match_state = 'completed' AND m2.created_at >= ?)
-		GROUP BY u.id
-		ORDER BY total_wins_this_month DESC
-	`, firstOfMonth, firstOfMonth).Rows()
+			SELECT
+				u.id,
+				u.discord_username,
+				u.discord_id,
+				u.current_rating,
+				SUM(IF(m1.winner = 'p1' AND m1.p1_user_id = u.id, 1, 0)) + SUM(IF(m1.winner = 'p2' AND p2_user_id = u.id, 1, 0))                     as total_wins_this_month,
+				SUM(IF(m1.winner = 'p1' AND m1.p2_user_id = u.id, 1, 0)) + SUM(IF(m1.winner = 'p2' AND m1.p1_user_id = u.id, 1, 0)) as total_losses_this_month
+			FROM users u
+			LEFT JOIN matches m1 ON
+				(u.id = m1.p1_user_id OR u.id = m1.p2_user_id) AND m1.match_state = 'completed' AND m1.created_at >= ?
+			GROUP BY u.id
+			ORDER BY total_wins_this_month DESC
+	`, firstOfMonth).Rows()
 	if err != nil {
 		panic(err)
 	}

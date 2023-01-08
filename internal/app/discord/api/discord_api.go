@@ -222,7 +222,7 @@ func UpsertDmChannel(recipient db.User) (createdChannel bool, response Channel) 
 	}
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		log.Panicf("Unable to read message response for DM channel creation with user %s", recipient.UserId)
+		log.Panicf("Unable to read message response for DM channel creation with user %d", recipient.UserId)
 	}
 	return true, response
 }
