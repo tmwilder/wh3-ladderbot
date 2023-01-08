@@ -19,7 +19,8 @@ To get local development running:
 9. Go read [set up Ngrok](https://github.com/discord/discord-example-app#set-up-interactivity) and set that up.
 10. Install your test app to any discord channel.
 11. POST to localhost:8080/commands?ADMIN_KEY=<pull from step 8> to install this app's commands as global commands to your test bot.
-12. You should now be able to send slash commands from your test channel using your test app to your local dev env.
+12. POST to localhost:8080/maps with a payload like ["Arnheim", "Itza", "Black Ark"] to populate maps and rules in your channel.
+13. You should now be able to send slash commands from your test channel using your test app to your local dev env.
 
 ## Discord Server and Channel Configuration
 
@@ -40,13 +41,16 @@ To this end - to configure a Home Server we need:
    4. #leaderboard
    5. #elo-ratings
    6. #rules-and-maps
-   7. The bot installed with manage messages, create messages, application.commands permissions.
+   7. The bot installed with manage messages, create messages, application.commands, manage roles permissions.
+   8. A role called laddering exists on the service and has a nice color assigned like green.
+   9. The bot is scoped via channel perms to only the above channels and roles to minimize attack surface.
 
 To configure a guest server:
 1. The bot is installed with application.commands and create messages.
-2. #find-matches for players.
+2. #find-matches is created.
 3. Locked #ladder-feed following the home server ladder feed announcements, although the channel ca be named anything because the bot does not directly interact with it.
 4. Optionally - we can configure the maps, leaderboard, and elo ratings channel as announcement channels and follow them on guests.
+5. The bot is scoped via channel perms to only the above channels and roles to minimize attack surface.
 
 Other useful operations:
 `docker compose -down` - Takes down the instances
@@ -59,7 +63,7 @@ To deploy to prod - get access to the parent AWS account, build locally, and upl
 right now and if we get a few folks working on this we'll streamline further.
 
 ### Migrations
-Add a new migation to internal/db/migrations and test it on local. Then deploy to the prod lambda.
+Add a new migration to internal/db/migrations and test it on local. Then deploy to the prod lambda.
 
 Then post to `api.mtgshuffle.com/migrate?admin_key=<key>` with the admin key stored in our aws secrets. This is not mega
 secure but is good enough for the hobby level of this project.
