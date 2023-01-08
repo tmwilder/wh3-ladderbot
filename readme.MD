@@ -76,8 +76,7 @@ public call / ease of sec impl tradeoff.
 
 ## TODO:
 1. Clean up some of the routing/request handling/error handling ergonomics so that our use of gin is less janky
-2. Set up a way to schedule leaderboard updates either on each match change or periodically
-3. Set up some admin functionality for fixing oops and such
-4. Add event support
-5. Add help command
-6. Add command shortcut aliases like /q /dq /r
+2. Set up some admin functionality for fixing oops and such
+3. Add event support
+4. Add help command
+5. Add command shortcut aliases like /q /dq /r
