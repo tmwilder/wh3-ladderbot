@@ -82,7 +82,10 @@ func handlePlayedMatch(conn *gorm.DB, interaction api.Interaction, isWin bool) (
 
 func recordMatchWinner(conn *gorm.DB, p1User db.User, p2User db.User, mostRecentMatch db.Match, p1Won bool) (success bool, channnelMessage string, shouldCrossPost bool) {
 	// Get current ratings, compute new ratings, update ratings for both players, then update match state to complete.
-	newP1Rating, newP2Rating := ratings.ComputeNewElos(p1User.CurrentRating, p2User.CurrentRating, p1Won)
+	p1K := db.GetPlayerKValue(conn, p1User.UserId, mostRecentMatch.GameMode)
+	p2K := db.GetPlayerKValue(conn, p2User.UserId, mostRecentMatch.GameMode)
+
+	newP1Rating, newP2Rating := ratings.ComputeNewElos(p1User.CurrentRating, p2User.CurrentRating, p1Won, p1K, p2K)
 
 	var winnerValue db.WhoWon
 	var winnerName string

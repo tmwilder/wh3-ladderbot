@@ -136,6 +136,14 @@ func setMapsHandler(c *gin.Context) {
 		"Each player chooses 1 blind pick.",
 		"A random map will be assigned and you may begin the game.\n",
 
+		"**Ratings:**",
+		"We use a standard Elo rating system to provide better matchmaking. You can see current ratings in #elo-ratings.",
+		"Starting Elo is 1200. K for bo3 games is 32 which means the most your rating can change up or down is 32 points.",
+		"Your rating will move more when you beat a much higher rated player or lose to a much lower rated player.",
+		"New players have a provisional K value of 64 for their first 10 games to converge to an accurate rating faster.",
+		"bo1 games have their K values halved to reflect the shorter time commitment and less competitive nature of bo1.",
+		"Treat ratings as a useful matchmaking tool and that's it. We compete to win season score, not to be the highest rated player.\n",
+
 		"**Crashes/Disconnects:**",
 		"Suspected intentional abuse of crashes/disconnects will result in moderator review and potential suspension from the ladder. Play fair and try to work things out with your opponent.",
 		"If at the time of the crash/disconnect there is a clear winner, that player is considered the winner. (see the Ground Rules).",

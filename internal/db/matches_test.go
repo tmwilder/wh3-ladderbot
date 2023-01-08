@@ -67,7 +67,3 @@ func TestCreateMatchFromRequests(t *testing.T) {
 	assert.Equal(t, matchForP1.MatchId, matchForP2.MatchId)
 	assert.Equal(t, matchForP1.MatchState, Matched)
 }
-
-func TestCreateMatch(t *testing.T) {
-
-}

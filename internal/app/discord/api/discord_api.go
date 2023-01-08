@@ -218,11 +218,13 @@ func UpsertDmChannel(recipient db.User) (createdChannel bool, response Channel) 
 	}
 	statusCode, body := callDiscord(incrementalUrl, http.MethodPost, body)
 	if statusCode != http.StatusOK {
-		panic(fmt.Sprintf("Unable to create DM channel - got non-200 code: %d w/msg: %s", statusCode, string(body)))
+		log.Printf("Unable to create DM channel - got non-200 code: %d w/msg: %s", statusCode, string(body))
+		return false, Channel{}
 	}
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		log.Panicf("Unable to read message response for DM channel creation with user %d", recipient.UserId)
+		log.Printf("Unable to read message response for DM channel creation with user %d", recipient.UserId)
+		return false, Channel{}
 	}
 	return true, response
 }

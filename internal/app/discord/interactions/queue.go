@@ -84,11 +84,15 @@ func Queue(conn *gorm.DB, interaction api.Interaction) (success bool, channelMes
 			bestPairing.RequestedGameMode,
 			mapStr)
 
-		_, p1Channel := api.UpsertDmChannel(user)
-		api.PostOneMessage(p1Channel.ChannelId, message)
+		success1, p1Channel := api.UpsertDmChannel(user)
+		if success1 {
+			api.PostOneMessage(p1Channel.ChannelId, message)
+		}
 
-		_, p2Channel := api.UpsertDmChannel(opponent)
-		api.PostOneMessage(p2Channel.ChannelId, message)
+		success2, p2Channel := api.UpsertDmChannel(opponent)
+		if success2 {
+			api.PostOneMessage(p2Channel.ChannelId, message)
+		}
 
 		return true, message, true
 	}

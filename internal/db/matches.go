@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"discordbot/internal/app/ratings"
 	"fmt"
 	"gorm.io/gorm"
 	"log"
@@ -121,6 +122,35 @@ func CreateMatch(conn *gorm.DB, match Match) (success bool) {
 		return false
 	}
 	return success
+}
+
+func GetPlayerKValue(conn *gorm.DB, userId int, mode GameMode) (kValue float64) {
+	row := conn.Raw(`SELECT COUNT(*) FROM matches WHERE (p1_user_id = ? OR p2_user_id = ?) AND match_state = 'completed'`, userId, userId).Row()
+	if conn.Error != nil {
+		log.Println(conn.Error)
+		return ratings.K
+	}
+	var totalMatches int
+	err := row.Scan(&totalMatches)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return ratings.ProvisionalK
+		} else {
+			log.Println(err)
+			return ratings.K
+		}
+	}
+
+	if totalMatches <= 9 {
+		kValue = ratings.ProvisionalK
+	} else {
+		kValue = ratings.K
+	}
+
+	if mode == Bo1 {
+		kValue = kValue / ratings.Bo1DiscountFactor
+	}
+	return kValue
 }
 
 /*
@@ -263,8 +293,4 @@ func CreateMatchHistory(conn *gorm.DB, match Match) (success bool) {
 		return false
 	}
 	return true
-}
-
-func GetMatchHistory(conn *gorm.DB, matchId int) []Match {
-	return []Match{}
 }

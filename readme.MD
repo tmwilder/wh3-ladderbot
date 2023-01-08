@@ -33,7 +33,7 @@ only contain the matchmaking queue and a ladder feed so that they can see what i
 To this end - to configure a Home Server we need:
 
 1. A server
-2. The bot is installed on that server with permissions send messages, manage messages, application.commands, manager roles.
+2. The bot is installed on that server with permissions send messages, manage messages, application.commands, manage roles.
 3. The server has the following server configuration set up:
    1. Status as a community so that we can do an announcement channel.
    2. #ladder-feed - this can be in a section like WCL and needs to be a channel with this exact name and announcements enabled. Permissions should be locked to just bot posts.
