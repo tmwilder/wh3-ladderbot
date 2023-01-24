@@ -9,14 +9,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func Report(conn *gorm.DB, interaction api.Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
+func Report(conn *gorm.DB, discordApi api.DiscordApi, interaction api.Interaction) (success bool, channelMessage string, shouldCrossPost bool) {
 	outcome := commands.ReportOutcome(interaction.Data.Options[0].Value)
 
 	switch outcome {
 	case commands.Win:
-		return handlePlayedMatch(conn, interaction, true)
+		return handlePlayedMatch(conn, discordApi, interaction, true)
 	case commands.Loss:
-		return handlePlayedMatch(conn, interaction, false)
+		return handlePlayedMatch(conn, discordApi, interaction, false)
 	case commands.Cancel:
 		return handleCancel(conn, interaction)
 	default:
@@ -24,7 +24,7 @@ func Report(conn *gorm.DB, interaction api.Interaction) (success bool, channelMe
 	}
 }
 
-func handlePlayedMatch(conn *gorm.DB, interaction api.Interaction, isWin bool) (success bool, channelMessage string, shouldCrossPost bool) {
+func handlePlayedMatch(conn *gorm.DB, discordApi api.DiscordApi, interaction api.Interaction, isWin bool) (success bool, channelMessage string, shouldCrossPost bool) {
 	foundUser, user := db.GetUserByDiscordId(conn, interaction.Member.User.Id)
 
 	if !foundUser {
@@ -56,8 +56,8 @@ func handlePlayedMatch(conn *gorm.DB, interaction api.Interaction, isWin bool) (
 	switch mostRecentMatch.MatchState {
 	case db.Matched:
 		// Matched state will be hit once - no state leak
-		api.RemoveRoleFromGuildMember(LadderQueueRoleName, p1User.DiscordId)
-		api.RemoveRoleFromGuildMember(LadderQueueRoleName, p2User.DiscordId)
+		discordApi.RemoveRoleFromGuildMember(LadderQueueRoleName, p1User.DiscordId)
+		discordApi.RemoveRoleFromGuildMember(LadderQueueRoleName, p2User.DiscordId)
 		// Get current ratings, compute new ratings, update ratings for both players, then update match state to complete.
 		return recordMatchWinner(conn, p1User, p2User, mostRecentMatch, p1Won)
 	case db.Completed:
@@ -71,9 +71,13 @@ func handlePlayedMatch(conn *gorm.DB, interaction api.Interaction, isWin bool) (
 		db.RevertUserRating(conn, player2UserId)
 		_, p1User := db.GetUserById(conn, player1UserId)
 		_, p2User := db.GetUserById(conn, player2UserId)
+		discordApi.RemoveRoleFromGuildMember(LadderQueueRoleName, p1User.DiscordId)
+		discordApi.RemoveRoleFromGuildMember(LadderQueueRoleName, p2User.DiscordId)
 		return recordMatchWinner(conn, p1User, p2User, mostRecentMatch, p1Won)
 	case db.Cancelled:
 		// Get current ratings, compute new ratings, update ratings for both players, then update match state to complete.
+		discordApi.RemoveRoleFromGuildMember(LadderQueueRoleName, p1User.DiscordId)
+		discordApi.RemoveRoleFromGuildMember(LadderQueueRoleName, p2User.DiscordId)
 		return recordMatchWinner(conn, p1User, p2User, mostRecentMatch, p1Won)
 	default:
 		return false, fmt.Sprintf("Unknown prior match state %s contact admins for help.", mostRecentMatch.MatchState), false

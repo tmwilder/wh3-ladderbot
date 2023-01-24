@@ -56,7 +56,7 @@ func findBestPairing(matchRequest db.MatchRequest, requesterRating int, candidat
 	return bestMatch
 }
 
-func ExpireMatchRequests(conn *gorm.DB) (success bool) {
+func ExpireMatchRequests(conn *gorm.DB, discordApi api.DiscordApi) (success bool) {
 	now := time.Now()
 	expiredRequests := db.FindExpiredRequests(conn, now)
 	messages := []string{}
@@ -64,7 +64,7 @@ func ExpireMatchRequests(conn *gorm.DB) (success bool) {
 		success := db.CancelMatchRequest(conn, v.RequestingUserId)
 		if success {
 			_, user := db.GetUserById(conn, v.RequestingUserId)
-			api.RemoveRoleFromGuildMember(LadderQueueRoleName, user.DiscordId)
+			discordApi.RemoveRoleFromGuildMember(LadderQueueRoleName, user.DiscordId)
 			messages = append(messages, fmt.Sprintf("Dequeued match request for user <@!%s> because it was 45m stale. Please requeue if you'd like to keep playing!\n", user.DiscordId))
 		}
 	}

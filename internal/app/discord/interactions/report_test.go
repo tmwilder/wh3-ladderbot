@@ -12,6 +12,17 @@ import (
 	"time"
 )
 
+type MockDiscordApi struct {
+}
+
+func (c MockDiscordApi) AddRoleToGuildMember(roleName string, discordId string) (success bool) {
+	return true
+}
+
+func (c MockDiscordApi) RemoveRoleFromGuildMember(roleName string, discordId string) (success bool) {
+	return true
+}
+
 func setUpTestMatch(conn *gorm.DB) (user1 db.User, user2 db.User, match db.Match) {
 	testDiscordUsername1 := fmt.Sprintf("coolsk8r1990%d", rand.Intn(1000000))
 	testDiscordId1 := fmt.Sprintf("somediscordId%d", rand.Intn(1000000))
@@ -58,10 +69,12 @@ func setUpTestMatch(conn *gorm.DB) (user1 db.User, user2 db.User, match db.Match
 
 func TestReportWin(t *testing.T) {
 	conn := db.GetGorm(db.GetTestMysSQLConnStr())
+	mockApi := MockDiscordApi{}
+
 	rand.Seed(time.Now().UnixNano())
 	user1, user2, match := setUpTestMatch(conn)
 
-	Report(conn, api.Interaction{
+	Report(conn, mockApi, api.Interaction{
 		Member: api.DiscordMemberInfo{api.DiscordUser{Id: user1.DiscordId, Username: user1.DiscordUserName}},
 		Data: api.InteractionData{
 			Name: commands.Report,
@@ -87,10 +100,12 @@ func TestReportWin(t *testing.T) {
 
 func TestReportLoss(t *testing.T) {
 	conn := db.GetGorm(db.GetTestMysSQLConnStr())
+	mockApi := MockDiscordApi{}
+
 	rand.Seed(time.Now().UnixNano())
 	user1, user2, match := setUpTestMatch(conn)
 
-	Report(conn, api.Interaction{
+	Report(conn, mockApi, api.Interaction{
 		Member: api.DiscordMemberInfo{api.DiscordUser{Id: user1.DiscordId, Username: user1.DiscordUserName}},
 		Data: api.InteractionData{
 			Name: commands.Report,
@@ -116,10 +131,12 @@ func TestReportLoss(t *testing.T) {
 
 func TestReportCancel(t *testing.T) {
 	conn := db.GetGorm(db.GetTestMysSQLConnStr())
+	mockApi := MockDiscordApi{}
+
 	rand.Seed(time.Now().UnixNano())
 	user1, user2, match := setUpTestMatch(conn)
 
-	Report(conn, api.Interaction{
+	Report(conn, mockApi, api.Interaction{
 		Member: api.DiscordMemberInfo{api.DiscordUser{Id: user1.DiscordId, Username: user1.DiscordUserName}},
 		Data: api.InteractionData{
 			Name: commands.Report,
@@ -145,6 +162,8 @@ func TestReportCancel(t *testing.T) {
 
 func TestReportCircularClusterOfNonsense(t *testing.T) {
 	conn := db.GetGorm(db.GetTestMysSQLConnStr())
+	mockApi := MockDiscordApi{}
+
 	rand.Seed(time.Now().UnixNano())
 	user1, user2, match := setUpTestMatch(conn)
 
@@ -162,7 +181,7 @@ func TestReportCircularClusterOfNonsense(t *testing.T) {
 		}}
 
 	// Report a win
-	Report(conn, interaction)
+	Report(conn, mockApi, interaction)
 
 	_, updatedMatch := db.GetMostRecentMatch(conn, user2.UserId)
 	_, updatedP1User := db.GetUserById(conn, user1.UserId)
@@ -176,7 +195,7 @@ func TestReportCircularClusterOfNonsense(t *testing.T) {
 
 	// Cancel the win
 	interaction.Data.Options[0].Value = int(commands.Cancel)
-	Report(conn, interaction)
+	Report(conn, mockApi, interaction)
 
 	// #TODO - why is p2 not getting reset to 1200 - look at history and think about our stack data structure approach.
 	_, updatedMatch = db.GetMostRecentMatch(conn, user2.UserId)
@@ -191,7 +210,7 @@ func TestReportCircularClusterOfNonsense(t *testing.T) {
 
 	// Report a loss instead
 	interaction.Data.Options[0].Value = int(commands.Loss)
-	Report(conn, interaction)
+	Report(conn, mockApi, interaction)
 
 	_, updatedMatch = db.GetMostRecentMatch(conn, user2.UserId)
 	_, updatedP1User = db.GetUserById(conn, user1.UserId)
@@ -205,7 +224,7 @@ func TestReportCircularClusterOfNonsense(t *testing.T) {
 
 	// Report the same loss again
 	interaction.Data.Options[0].Value = int(commands.Loss)
-	Report(conn, interaction)
+	Report(conn, mockApi, interaction)
 
 	_, updatedMatch = db.GetMostRecentMatch(conn, user2.UserId)
 	_, updatedP1User = db.GetUserById(conn, user1.UserId)

@@ -101,15 +101,17 @@ func handleInteractionCommand(interaction api.Interaction) (channelMessage strin
 	// Do authz - checks that the userID can do the thing being attempted - bail w/4xx if not.
 	conn := db.GetDbConn()
 
+	discordApi := api.ConcreteDiscordApi{}
+
 	switch interaction.Data.Name {
 	case commands.Queue:
-		_, channelMessage, shouldCrossPost = interactions.Queue(conn, interaction)
+		_, channelMessage, shouldCrossPost = interactions.Queue(conn, discordApi, interaction)
 		break
 	case commands.Dequeue:
-		_, channelMessage, shouldCrossPost = interactions.Dequeue(conn, interaction)
+		_, channelMessage, shouldCrossPost = interactions.Dequeue(conn, discordApi, interaction)
 		break
 	case commands.Report:
-		_, channelMessage, shouldCrossPost = interactions.Report(conn, interaction)
+		_, channelMessage, shouldCrossPost = interactions.Report(conn, discordApi, interaction)
 	default:
 		panic("Unknown interaction: " + interaction.Data.Name)
 	}

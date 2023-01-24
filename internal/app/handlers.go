@@ -131,7 +131,7 @@ func setMapsHandler(c *gin.Context) {
 		"Winner of game 2 Picks 1 of their remaining 2 factions\n",
 
 		"**Bo1 Format:**",
-		"Use the https://aoe2cm.net/preset/DNEXyv Pick & Ban tool.",
+		"Use the https://aoe2cm.net/preset/MdUmU Pick & Ban tool.",
 		"Each player chooses 3 global bans.",
 		"Each player chooses 1 blind pick.",
 		"A random map will be assigned and you may begin the game.\n",
@@ -181,7 +181,9 @@ func expireMatchRequestsHandler(c *gin.Context) {
 		return
 	}
 	conn := db.GetDbConn()
-	interactions.ExpireMatchRequests(conn)
+	discordApi := api.ConcreteDiscordApi{}
+
+	interactions.ExpireMatchRequests(conn, discordApi)
 }
 
 func PostMonthlyWinStandings(conn *gorm.DB) {

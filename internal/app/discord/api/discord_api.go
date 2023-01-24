@@ -73,6 +73,14 @@ type Role struct {
 
 const maxMessageCharsLength = 1800
 
+type DiscordApi interface {
+	AddRoleToGuildMember(roleName string, userId string) (success bool)
+	RemoveRoleFromGuildMember(roleName string, userId string) (success bool)
+}
+
+type ConcreteDiscordApi struct {
+}
+
 func ReplaceChannelContents(guildId string, channelName string, contentLines []string) {
 	// Select the channel matching our name
 	foundChannel, channel := findChannel(channelName, guildId)
@@ -326,7 +334,7 @@ func findRole(roleName string, guildId string) (foundRole bool, channel Role) {
 	return false, Role{}
 }
 
-func AddRoleToGuildMember(roleName string, userId string) (success bool) {
+func (c ConcreteDiscordApi) AddRoleToGuildMember(roleName string, userId string) (success bool) {
 	appConfig := config.GetAppConfig()
 	foundRole, role := findRole(roleName, appConfig.HomeGuildId)
 
@@ -345,7 +353,7 @@ func AddRoleToGuildMember(roleName string, userId string) (success bool) {
 	return true
 }
 
-func RemoveRoleFromGuildMember(roleName string, userId string) (success bool) {
+func (c ConcreteDiscordApi) RemoveRoleFromGuildMember(roleName string, userId string) (success bool) {
 	appConfig := config.GetAppConfig()
 	_, role := findRole(roleName, appConfig.HomeGuildId)
 
@@ -353,7 +361,8 @@ func RemoveRoleFromGuildMember(roleName string, userId string) (success bool) {
 	statusCode, _ := callDiscord(incrementalUrl, http.MethodDelete, []byte{})
 
 	if statusCode != http.StatusNoContent {
-		panic(fmt.Sprintf("Unable to add role to member of the guild - got non-200 code: %d", statusCode))
+		log.Printf("Unable to add remove role from member of the guild - got non-200 code: %d", statusCode)
+		return false
 	}
 
 	return true

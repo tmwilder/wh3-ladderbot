@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"discordbot/internal/app"
+	"discordbot/internal/app/discord/api"
 	"discordbot/internal/app/discord/interactions"
 	"discordbot/internal/db"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -11,7 +12,8 @@ import (
 
 func HandleRequest(ctx context.Context) (string, error) {
 	conn := db.GetDbConn()
-	expirySuccess := interactions.ExpireMatchRequests(conn)
+	discordApi := api.ConcreteDiscordApi{}
+	expirySuccess := interactions.ExpireMatchRequests(conn, discordApi)
 	if !expirySuccess {
 		log.Panic("Unable to expire match requests...")
 	}
